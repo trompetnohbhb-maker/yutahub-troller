@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-FE_REAL_FLING",
+    Version = "V7.0-STABLE_TOUCH_FLING",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -129,7 +129,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "REAL TOUCH FLING: OFF"
+TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -141,7 +141,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "FE Server-Sided Fling: Real memantulkan musuh di layar semua orang.\nBerjalan tegak lurus secara normal, senggol musuh untuk mengeliminasi."
+CustomText.Text = "Sub-Floor Physics Engine: Karakter berdiri tegak & jalan mulus.\nPeluru fling disembunyikan di bawah kaki agar tubuh tidak bergetar."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -182,8 +182,8 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. ENGINE REAL FE SERVER-SIDED FLING (NYATA & MATI)
-local FEFlingActive = false
+-- B. REVOLUTIONARY SUB-FLOOR TOUCH FLING (100% TEGAK LURUS & NYATA)
+local TouchFlingActive = false
 local FlingHeartbeat = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
@@ -193,44 +193,51 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     
     if not RootPart or not Humanoid then return end
     
-    FEFlingActive = not FEFlingActive
-    if FEFlingActive then
-        TrollKillToggle.Text = "REAL TOUCH FLING: ACTIVE"
+    TouchFlingActive = not TouchFlingActive
+    if TouchFlingActive then
+        TrollKillToggle.Text = "TOUCH FLING AURA: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Memaksa server memvalidasi pergerakan fisik karakter Anda
-        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-        
         FlingHeartbeat = RunService.Heartbeat:Connect(function()
-            if not FEFlingActive or not RootPart.Parent or not Humanoid.Parent then
+            if not TouchFlingActive or not RootPart.Parent or not Humanoid.Parent then
                 if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
                 return
             end
             
-            -- Pertahankan pondasi koordinat agar di layar Anda tetap berjalan normal menapak tanah
+            -- 1. Kunci pondasi utama (Kaki) agar tetap normal menapak tanah
             RootPart.CanCollide = true
             
-            -- SUNTIKAN FORMULA SEGI EMPAT (SERVER-SIDED BYPASS):
-            -- Kita mengubah nilai Velocity horizontal ke batas limit maksimum fisika mesin Roblox.
-            -- Karena karakter ini adalah milik Anda, server WAJIB menerima data bahwa tubuh Anda sekeras peluru.
-            -- Di layar Anda jalan biasa, tapi di server objek Anda bergetar secepat kilat menghancurkan musuh.
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 99999, 0) -- Putaran horizontal nyata yang merusak hitbox musuh
+            -- 2. Cari bagian tubuh pelapis (misal: Tangan kanan / Kaki kiri)
+            local LimbPart = Character:FindFirstChild("Right Arm") or Character:FindFirstChild("RightUpperArm") or Character:FindFirstChild("Torso")
             
-            -- Dorong paksa data paket ke server agar tidak terjadi delay visual pada musuh
+            if LimbPart and LimbPart:IsA("BasePart") then
+                pcall(function()
+                    -- Matikan collision anggota tubuh agar bisa masuk ke hitbox musuh
+                    LimbPart.CanCollide = false
+                    
+                    -- METODE SUB-FLOOR GLITCH:
+                    -- Mematahkan posisi visual LimbPart murni ke arah bawah lantai sebesar 1.5 stud
+                    -- Tubuh utama Anda tetap tegak lurus, tapi peluru fling ditarik ke tanah tepat di bawah kaki Anda
+                    LimbPart.CFrame = RootPart.CFrame * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                    
+                    -- Tembakkan rotasi ekstrim murni pada objek tersembunyi tersebut
+                    LimbPart.Velocity = Vector3.new(0, 0, 0)
+                    LimbPart.RotVelocity = Vector3.new(99999, 99999, 99999)
+                end)
+            end
+            
+            -- Cegah server menidurkan jaringan fisika
             settings().Physics.AllowSleep = false
-            settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Disabled
         end)
     else
-        TrollKillToggle.Text = "REAL TOUCH FLING: OFF"
+        TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
         if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
         pcall(function()
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            RootPart.RotVelocity = Vector3.new(0, 0, 0)
             Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
         end)
     end
