@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TROLL_GHOST_MAX",
+    Version = "V7.0-REAL_INVISIBLE_FLING",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -133,7 +133,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
+TrollKillToggle.Text = "REAL INVISIBLE FLING: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Ghost-Fling Engine: Menembakkan gaya linier searah.\nKarakter berdiri tegak menjaga bobot massa untuk melempar musuh."
+CustomText.Text = "Metode Glitch Invisible Fling: Karakter asli bersembunyi aman.\nHantam tubuh musuh, mereka akan langsung terpental lenyap seketika!"
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -155,7 +155,7 @@ CustomText.BackgroundTransparency = 1
 --          LOGIKA UTAMA INTERAKSI FITUR      
 -- ==========================================
 
--- A. BYPASS CHAT SPAMMER EMULATOR
+-- A. CHAT SPAMMER BYPASS
 local Spamming = false
 TrollSpamToggle.MouseButton1Click:Connect(function()
     Spamming = not Spamming
@@ -172,9 +172,7 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
                     
                     if TextService and TextService.ChatVersion == Enum.ChatVersion.TextChatService then
                         local channel = TextService.TextChannels:FindFirstChild("RBXGeneral")
-                        if channel then
-                            channel:SendAsync("YutaHub Troll On Top! 🚀")
-                        end
+                        if channel then channel:SendAsync("YutaHub Troll On Top! 🚀") end
                     elseif ChatService then
                         ChatService:FireServer("YutaHub Troll On Top! 🚀", "All")
                     end
@@ -189,59 +187,60 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. BYPASS MONSTER FLING STABILIZER (METODE GHOST-FLING ANTI-KEMBALI KEPENTAL)
+-- B. REAL INVISIBLE FLING ENGINE (100% SAMA SEPERTI EXPLOITER LAIN)
 local FlingActive = false
-local FlingConnection = nil
+local LoopConn = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
-    local Character = LocalPlayer.Character
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    local Char = LocalPlayer.Character
+    local Hum = Char and Char:FindFirstChildOfClass("Humanoid")
+    local Root = Char and Char:FindFirstChild("HumanoidRootPart")
     
-    if not RootPart or not Humanoid then return end
+    if not Root or not Hum then return end
     
     FlingActive = not FlingActive
     if FlingActive then
-        TrollKillToggle.Text = "MONSTER FLING KILL: ON"
+        TrollKillToggle.Text = "INVISIBLE FLING: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Pertahankan status berdiri (Physics Mode) agar massa tubuh utuh membanting musuh
-        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        -- Glitch Sendi Fisika (Membuat Tubuh Klien Lepas dari Validasi Anti-Cheat)
+        local T_Clone = Root:Clone()
+        T_Clone.Parent = Char
+        Root:Destroy() -- Menghancurkan koneksi jangkar asli agar Anda kebal pentalan balik
+        LocalPlayer.Character = nil
+        LocalPlayer.Character = Char
+        task.wait(0.2)
         
-        FlingConnection = RunService.PostSimulation:Connect(function()
-            if not FlingActive or not RootPart.Parent or not Humanoid.Parent then
-                if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
+        LoopConn = RunService.Heartbeat:Connect(function()
+            if not FlingActive or not T_Clone.Parent or not Hum.Parent then
+                if LoopConn then LoopConn:Disconnect() LoopConn = nil end
                 return
             end
             
-            -- Matikan sistem tabrakan luar secara real-time
-            for _, Part in pairs(Character:GetChildren()) do
-                if Part:IsA("BasePart") then
-                    Part.CanCollide = false
-                end
+            -- Mematikan sistem tabrakan dinding agar tidak mental menembus batas map
+            for _, v in pairs(Char:GetChildren()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
             end
             
-            -- GHOST FLING CORE: Kirim daya dorong linier searah sumbu horizontal X/Z secara konstan
-            -- Server dipaksa membaca area hitbox kita menabrak semua koordinat musuh secara searah
-            RootPart.AssemblyLinearVelocity = Vector3.new(99999, 0, 99999)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0) -- Kunci rotasi agar kamera Anda tetap lurus
+            -- Menembakkan gaya hantam jutaan km/jam secara berputar melingkar di koordinat server
+            T_Clone.Velocity = Vector3.new(0, 0, 0)
+            T_Clone.RotVelocity = Vector3.new(99999, 99999, 99999)
+            
+            -- Kamera otomatis melayang stabil mengikuti pergerakan kursor mouse/HP
+            local MoveDir = Hum.MoveDirection
+            if MoveDir.Magnitude > 0 then
+                T_Clone.Position = T_Clone.Position + (MoveDir * 1.5)
+            end
         end)
     else
-        TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
+        TrollKillToggle.Text = "REAL INVISIBLE FLING: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
-        pcall(function()
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            
-            for _, Part in pairs(Character:GetChildren()) do
-                if Part:IsA("BasePart") then Part.CanCollide = true end
-            end
-        end)
+        if LoopConn then LoopConn:Disconnect() LoopConn = nil end
+        -- Paksa karakter Reset/Respawn kembali normal setelah mematikan fitur
+        if Hum then Hum:BreakJoints() end 
     end
 end)
 
