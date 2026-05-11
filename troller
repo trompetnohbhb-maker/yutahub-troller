@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-BYPASS_2026",
+    Version = "V7.0-TOUCH_FLING",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -133,7 +133,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
+TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Attachment Physics Engine 2026: Kebal Pentalan Balik.\nTubuh Anda tetap kokoh berjalan di tanah, tabrak musuh agar hancur."
+CustomText.Text = "Mekanisme Touch Fling Aura: Anda berjalan lurus dan normal.\nSiapa pun yang menyentuh tubuh Anda akan otomatis terpental jauh!"
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -187,76 +187,66 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. NEW 2026 ATTACHMENT FLING ENGINE (ANTI-KEPENTAL BALIK MUTLAK)
+-- B. SCRIPT TOUCH FLING AURA (JALAN NORMAL, MUSUH MENYENTUH LANGSUNG MENTAL)
 local FlingActive = false
 local FlingConnection = nil
-local VirtualAttachment = nil
-local VirtualLinearVelocity = nil
+local HiddenPart = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     
     if not RootPart or not Humanoid then return end
     
     FlingActive = not FlingActive
     if FlingActive then
-        TrollKillToggle.Text = "MONSTER FLING KILL: ON"
+        TrollKillToggle.Text = "TOUCH FLING AURA: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Menyuntikkan Objek Fisika Constraint Virtual (Metode 2026)
-        VirtualAttachment = Instance.new("Attachment")
-        VirtualAttachment.Name = "YutaFlingAttachment"
-        VirtualAttachment.Parent = RootPart
+        -- Membuat Part tiruan tersembunyi khusus untuk menjadi peluru Fling (Hitbox Aura)
+        HiddenPart = Instance.new("Part")
+        HiddenPart.Name = "YutaAuraPart"
+        HiddenPart.Size = Vector3.new(3.5, 3.5, 3.5) -- Ukuran area aura sentuh di sekeliling tubuh
+        HiddenPart.Transparency = 1 -- Sepenuhnya transparan (Tidak terlihat orang lain)
+        HiddenPart.CanCollide = false
+        HiddenPart.Massless = true
+        HiddenPart.Parent = Character
         
-        VirtualLinearVelocity = Instance.new("LinearVelocity")
-        VirtualLinearVelocity.Name = "YutaFlingVelocity"
-        VirtualLinearVelocity.Attachment0 = VirtualAttachment
-        VirtualLinearVelocity.MaxForce = 99999999
-        -- Server mendeteksi gaya konstan yang legal pada jaringan constraint klien
-        VirtualLinearVelocity.VectorVelocity = Vector3.new(0, 0, 0)
-        VirtualLinearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
-        VirtualLinearVelocity.Parent = RootPart
+        -- Pasang jangkar virtual agar HiddenPart menempel dan mengikuti posisi pinggang/RootPart Anda
+        local Attachment0 = Instance.new("Attachment", RootPart)
+        local Attachment1 = Instance.new("Attachment", HiddenPart)
+        local AlignPosition = Instance.new("AlignPosition")
+        AlignPosition.Attachment0 = Attachment0
+        AlignPosition.Attachment1 = Attachment1
+        AlignPosition.MaxForce = 99999999
+        AlignPosition.Responsiveness = 200
+        AlignPosition.Parent = RootPart
         
-        FlingConnection = RunService.PostSimulation:Connect(function()
-            if not FlingActive or not RootPart.Parent or not Humanoid.Parent or not VirtualLinearVelocity then
+        FlingConnection = RunService.Heartbeat:Connect(function()
+            if not FlingActive or not Character.Parent or not HiddenPart.Parent then
                 if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
                 return
             end
             
-            -- LOOP SECURITY COLLISION (Menahan Kaki Tetap Di Atas Tanah)
-            for _, Part in pairs(Character:GetChildren()) do
-                if Part:IsA("BasePart") then
-                    if Part.Name == "HumanoidRootPart" then
-                        Part.CanCollide = true 
-                    else
-                        Part.CanCollide = false
-                    end
-                end
-            end
+            -- Biarkan tubuh asli Anda jalan normal (CanCollide = True)
+            RootPart.CanCollide = true
             
-            -- MANIPULASI VEKTOR SINKRONISASI FLING:
-            -- Menggerakkan data matematika kecepatan linear secara bolak-balik dengan amplitudo ekstrem
-            -- Ini menciptakan osilasi hitbox hancur tak terlihat tepat di area tabrak musuh
-            local TickValue = math.sin(tick() * 60) * 85000
-            VirtualLinearVelocity.VectorVelocity = Vector3.new(TickValue, 0, TickValue)
+            -- Berikan pusaran daya hantam ekstrim HANYA pada Part tak terlihat (HiddenPart)
+            -- Tubuh Anda 100% diam dan stabil, tetapi aura di sekitar Anda berputar mematikan
+            HiddenPart.Velocity = Vector3.new(0, 0, 0)
+            HiddenPart.RotVelocity = Vector3.new(99999, 99999, 99999)
         end)
     else
-        TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
+        TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
         if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
-        if VirtualLinearVelocity then VirtualLinearVelocity:Destroy() VirtualLinearVelocity = nil end
-        if VirtualAttachment then VirtualAttachment:Destroy() VirtualAttachment = nil end
-        
+        if HiddenPart then HiddenPart:Destroy() HiddenPart = nil end
         pcall(function()
-            Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            for _, Part in pairs(Character:GetChildren()) do
-                if Part:IsA("BasePart") then Part.CanCollide = true end
-            end
+            RootPart.RotVelocity = Vector3.new(0, 0, 0)
         end)
     end
 end)
