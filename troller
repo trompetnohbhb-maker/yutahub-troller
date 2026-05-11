@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-FINAL_TROLL",
+    Version = "V7.0-BYPASS_2026",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Netless CFrame Physics Engine: Kaki menempel kokoh di tanah.\nTabrak musuh dari samping, musuh hancur sementara badan Anda normal."
+CustomText.Text = "Attachment Physics Engine 2026: Kebal Pentalan Balik.\nTubuh Anda tetap kokoh berjalan di tanah, tabrak musuh agar hancur."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -187,9 +187,11 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. REVOLUTIONARY NETLESS FLING ENGINE (ANTI-KEPENTAL BALIK & ANTI-JATUH MAP)
+-- B. NEW 2026 ATTACHMENT FLING ENGINE (ANTI-KEPENTAL BALIK MUTLAK)
 local FlingActive = false
 local FlingConnection = nil
+local VirtualAttachment = nil
+local VirtualLinearVelocity = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
@@ -204,18 +206,27 @@ TrollKillToggle.MouseButton1Click:Connect(function()
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Aktifkan simulasi fisika murni tanpa memutus sendi karakter
-        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        -- Menyuntikkan Objek Fisika Constraint Virtual (Metode 2026)
+        VirtualAttachment = Instance.new("Attachment")
+        VirtualAttachment.Name = "YutaFlingAttachment"
+        VirtualAttachment.Parent = RootPart
+        
+        VirtualLinearVelocity = Instance.new("LinearVelocity")
+        VirtualLinearVelocity.Name = "YutaFlingVelocity"
+        VirtualLinearVelocity.Attachment0 = VirtualAttachment
+        VirtualLinearVelocity.MaxForce = 99999999
+        -- Server mendeteksi gaya konstan yang legal pada jaringan constraint klien
+        VirtualLinearVelocity.VectorVelocity = Vector3.new(0, 0, 0)
+        VirtualLinearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+        VirtualLinearVelocity.Parent = RootPart
         
         FlingConnection = RunService.PostSimulation:Connect(function()
-            if not FlingActive or not RootPart.Parent or not Humanoid.Parent then
+            if not FlingActive or not RootPart.Parent or not Humanoid.Parent or not VirtualLinearVelocity then
                 if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
                 return
             end
             
-            -- LOOP SECURITY COLLISION:
-            -- Bagian tubuh dilepas deteksi tabrakannya agar bisa menyatu masuk ke dalam hitbox musuh
-            -- KECUALI HumanoidRootPart wajib ON (True) agar menapak tanah dan tidak meluncur jatuh ke void bawah peta
+            -- LOOP SECURITY COLLISION (Menahan Kaki Tetap Di Atas Tanah)
             for _, Part in pairs(Character:GetChildren()) do
                 if Part:IsA("BasePart") then
                     if Part.Name == "HumanoidRootPart" then
@@ -226,12 +237,11 @@ TrollKillToggle.MouseButton1Click:Connect(function()
                 end
             end
             
-            -- NETLESS HARNESS FORMULA (Rahasia Eksploiter):
-            -- Memberikan kombinasi gaya hantam Linear luar biasa besar hanya pada sumbu X dan Z 
-            -- Di mata server, massa Anda menjadi seberat gunung besi saat menyentuh lawan, 
-            -- Namun tubuh Anda di layar tetap stabil berjalan normal karena tidak ada manipulasi Angular (putaran).
-            RootPart.AssemblyLinearVelocity = Vector3.new(45000, 0, 45000)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0) -- Mengunci badan tetap lurus anti-pusing
+            -- MANIPULASI VEKTOR SINKRONISASI FLING:
+            -- Menggerakkan data matematika kecepatan linear secara bolak-balik dengan amplitudo ekstrem
+            -- Ini menciptakan osilasi hitbox hancur tak terlihat tepat di area tabrak musuh
+            local TickValue = math.sin(tick() * 60) * 85000
+            VirtualLinearVelocity.VectorVelocity = Vector3.new(TickValue, 0, TickValue)
         end)
     else
         TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
@@ -239,11 +249,11 @@ TrollKillToggle.MouseButton1Click:Connect(function()
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
         if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
+        if VirtualLinearVelocity then VirtualLinearVelocity:Destroy() VirtualLinearVelocity = nil end
+        if VirtualAttachment then VirtualAttachment:Destroy() VirtualAttachment = nil end
+        
         pcall(function()
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            
             for _, Part in pairs(Character:GetChildren()) do
                 if Part:IsA("BasePart") then Part.CanCollide = true end
             end
