@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TOUCH_FLING",
+    Version = "V7.0-PURE_STABLE",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -133,7 +133,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
+TrollKillToggle.Text = "PURE TOUCH FLING: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Mekanisme Touch Fling Aura: Anda berjalan lurus dan normal.\nSiapa pun yang menyentuh tubuh Anda akan otomatis terpental jauh!"
+CustomText.Text = "CFrame Teleport Aura: Tubuh Anda 100% normal dan tenang.\nMusuh yang berani mendekat/menyenggol akan langsung mental lenyap!"
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -187,67 +187,58 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. SCRIPT TOUCH FLING AURA (JALAN NORMAL, MUSUH MENYENTUH LANGSUNG MENTAL)
-local FlingActive = false
-local FlingConnection = nil
-local HiddenPart = nil
+-- B. SCRIPT PURE TOUCH FLING (100% DIAM, JALAN LURUS NORMAL, MUSUH MENYENTUH LANGSUNG TERBANG)
+local TouchFlingActive = false
+local TouchConnection = nil
+local DetectionRadius = 4.5 -- Jarak radius sentuh (stud) di sekeliling tubuh Anda
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
     local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     
-    if not RootPart or not Humanoid then return end
+    if not RootPart then return end
     
-    FlingActive = not FlingActive
-    if FlingActive then
-        TrollKillToggle.Text = "TOUCH FLING AURA: ACTIVE"
+    TouchFlingActive = not TouchFlingActive
+    if TouchFlingActive then
+        TrollKillToggle.Text = "PURE TOUCH FLING: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Membuat Part tiruan tersembunyi khusus untuk menjadi peluru Fling (Hitbox Aura)
-        HiddenPart = Instance.new("Part")
-        HiddenPart.Name = "YutaAuraPart"
-        HiddenPart.Size = Vector3.new(3.5, 3.5, 3.5) -- Ukuran area aura sentuh di sekeliling tubuh
-        HiddenPart.Transparency = 1 -- Sepenuhnya transparan (Tidak terlihat orang lain)
-        HiddenPart.CanCollide = false
-        HiddenPart.Massless = true
-        HiddenPart.Parent = Character
-        
-        -- Pasang jangkar virtual agar HiddenPart menempel dan mengikuti posisi pinggang/RootPart Anda
-        local Attachment0 = Instance.new("Attachment", RootPart)
-        local Attachment1 = Instance.new("Attachment", HiddenPart)
-        local AlignPosition = Instance.new("AlignPosition")
-        AlignPosition.Attachment0 = Attachment0
-        AlignPosition.Attachment1 = Attachment1
-        AlignPosition.MaxForce = 99999999
-        AlignPosition.Responsiveness = 200
-        AlignPosition.Parent = RootPart
-        
-        FlingConnection = RunService.Heartbeat:Connect(function()
-            if not FlingActive or not Character.Parent or not HiddenPart.Parent then
-                if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
+        TouchConnection = RunService.Heartbeat:Connect(function()
+            if not TouchFlingActive or not RootPart.Parent then
+                if TouchConnection then TouchConnection:Disconnect() TouchConnection = nil end
                 return
             end
             
-            -- Biarkan tubuh asli Anda jalan normal (CanCollide = True)
-            RootPart.CanCollide = true
-            
-            -- Berikan pusaran daya hantam ekstrim HANYA pada Part tak terlihat (HiddenPart)
-            -- Tubuh Anda 100% diam dan stabil, tetapi aura di sekitar Anda berputar mematikan
-            HiddenPart.Velocity = Vector3.new(0, 0, 0)
-            HiddenPart.RotVelocity = Vector3.new(99999, 99999, 99999)
+            -- Pindai seluruh pemain di server secara konstan
+            for _, Player in pairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass("Humanoid") then
+                    local EnemyRoot = Player.Character.HumanoidRootPart
+                    local EnemyHumanoid = Player.Character:FindFirstChildOfClass("Humanoid")
+                    
+                    if EnemyHumanoid.Health > 0 then
+                        -- Hitung jarak matematika antara koordinat Anda dengan koordinat musuh
+                        local Distance = (RootPart.Position - EnemyRoot.Position).Magnitude
+                        
+                        -- Jika musuh sangat dekat (menyenggol/menyentuh radius tubuh Anda)
+                        if Distance <= DetectionRadius then
+                            pcall(function()
+                                -- METODE CFRAME BOUNCE: Melempar koordinat paket data musuh bolak-balik sejauh jutaan stud
+                                -- Tubuh Anda tidak disentuh fisik sama sekali sehingga tidak akan bergetar/bergerak tidak jelas
+                                EnemyRoot.AssemblyLinearVelocity = Vector3.new(0, 999999, 0) -- Dorong paksa ke langit atas
+                                EnemyRoot.CFrame = EnemyRoot.CFrame * CFrame.new(0, 500, 0) -- Teleportasi instan di jaringan server
+                            end)
+                        end
+                    end
+                end
+            end
         end)
     else
-        TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
+        TrollKillToggle.Text = "PURE TOUCH FLING: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
-        if HiddenPart then HiddenPart:Destroy() HiddenPart = nil end
-        pcall(function()
-            RootPart.RotVelocity = Vector3.new(0, 0, 0)
-        end)
+        if TouchConnection then TouchConnection:Disconnect() TouchConnection = nil end
     end
 end)
 
