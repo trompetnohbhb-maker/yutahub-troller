@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TROLL_FIXED",
+    Version = "V7.0-TROLL_MAX",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "RotVelocity Engine: Tubuh Anda tetap stabil.\nDekati musuh untuk menghancurkan mereka tanpa membuat Anda terpental."
+CustomText.Text = "Assembly Core Logic: Aman, badan tidak membal.\nKarakter otomatis duduk saat aktif agar tidak terjatuh akibat pusaran."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -155,7 +155,7 @@ CustomText.BackgroundTransparency = 1
 --          LOGIKA UTAMA INTERAKSI FITUR      
 -- ==========================================
 
--- A. FIX CHAT SPAMMER (ROBLOX MODERN SYSTEM)
+-- A. BYPASS CHAT SPAMMER (SISTEM PAKET REMOTE)
 local Spamming = false
 TrollSpamToggle.MouseButton1Click:Connect(function()
     Spamming = not Spamming
@@ -167,16 +167,17 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
         task.spawn(function()
             while Spamming do
                 pcall(function()
-                    local TextChatService = game:GetService("TextChatService")
-                    local ChatChannel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-                    
-                    if ChatChannel then
-                        ChatChannel:SendAsync("YutaHub Troll On Top! 🚀")
+                    -- Kirim via remote request teks murni langsung ke server (Mengamankan line merah)
+                    local ChatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") and game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+                    if ChatEvent then
+                        ChatEvent:FireServer("YutaHub Troll On Top! 🚀", "All")
                     else
-                        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("YutaHub Troll On Top! 🚀", "All")
+                        -- Jalur alternatif jika game menggunakan TextChatService murni
+                        local Players = game:GetService("Players")
+                        game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("<font color='#FF0032'>[YutaHub]: Troll On Top! 🚀</font>")
                     end
                 end)
-                task.wait(2.5)
+                task.wait(3) -- Jeda aman dari mute server
             end
         end)
     else
@@ -186,9 +187,9 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. FIX FLING ANTI-BOUNCE KEPENTAL
+-- B. BYPASS FLING KILLED (ANTI-KEPENTAL BALIK)
 local FlingActive = false
-local FlingLoop = nil
+local FlingConnection = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
@@ -199,43 +200,46 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     
     FlingActive = not FlingActive
     if FlingActive then
-        TrollKillToggle.Text = "MONSTER FLING KILL: ACTIVE"
+        TrollKillToggle.Text = "MONSTER FLING KILL: ON"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        -- Kunci status duduk agar posisi kaki Anda tetap menempel lurus di tanah
+        Humanoid.Sit = true
         
-        FlingLoop = RunService.Heartbeat:Connect(function()
-            if not FlingActive or not RootPart.Parent then 
-                if FlingLoop then FlingLoop:Disconnect() end 
-                return 
+        FlingConnection = RunService.PostSimulation:Connect(function()
+            if not FlingActive or not RootPart.Parent or not Humanoid.Parent then
+                if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
+                return
             end
             
-            -- Pengunci Gravitasi + Rotasi Horizontal Ekstrem (Bypass Fling Anti-Mental)
-            RootPart.Velocity = Vector3.new(0, -15, 0) 
-            RootPart.RotVelocity = Vector3.new(0, 65000, 0) 
-            
+            -- Mematikan sistem tabrakan dinding agar tidak mental menembus batas map
             for _, Part in pairs(Character:GetChildren()) do
                 if Part:IsA("BasePart") then
                     Part.CanCollide = false
                 end
             end
+            
+            -- Menggunakan Properti Fisika Baru: Assembly Velocity (Bypass Anti-Cheat & Anti-Guncang)
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, -100, 0) -- Dorong paksa ke dasar lantai agar tidak terbang
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 99999, 0) -- Putar pusaran hitbox horizontal ekstrim ke musuh
         end)
     else
         TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if FlingLoop then FlingLoop:Disconnect() FlingLoop = nil end
+        if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
         pcall(function()
-            RootPart.Velocity = Vector3.new(0, 0, 0)
-            RootPart.RotVelocity = Vector3.new(0, 0, 0)
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            Humanoid.Sit = false
             Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
         end)
     end
 end)
 
--- C. PANEL BUTTON INTERFACES
+-- C. PANEL BUTTON INTERFACES (BUKA/TUTUP MENU)
 ToggleIcon.MouseButton1Click:Connect(function() 
     MainFrame.Visible = not MainFrame.Visible 
 end)
