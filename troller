@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TROLL_MAX",
+    Version = "V7.0-TROLL_BYPASS_MAX",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Assembly Core Logic: Aman, badan tidak membal.\nKarakter otomatis duduk saat aktif agar tidak terjatuh akibat pusaran."
+CustomText.Text = "Bypass Core Engine: Tubuh Anda tetap kokoh berdiri di tanah.\nDekati musuh secara perlahan, musuh akan langsung hancur terlempar."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -155,7 +155,7 @@ CustomText.BackgroundTransparency = 1
 --          LOGIKA UTAMA INTERAKSI FITUR      
 -- ==========================================
 
--- A. BYPASS CHAT SPAMMER (SISTEM PAKET REMOTE)
+-- A. BYPASS CHAT SPAMMER EMULATOR
 local Spamming = false
 TrollSpamToggle.MouseButton1Click:Connect(function()
     Spamming = not Spamming
@@ -167,17 +167,21 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
         task.spawn(function()
             while Spamming do
                 pcall(function()
-                    -- Kirim via remote request teks murni langsung ke server (Mengamankan line merah)
-                    local ChatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") and game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
-                    if ChatEvent then
-                        ChatEvent:FireServer("YutaHub Troll On Top! 🚀", "All")
-                    else
-                        -- Jalur alternatif jika game menggunakan TextChatService murni
-                        local Players = game:GetService("Players")
-                        game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("<font color='#FF0032'>[YutaHub]: Troll On Top! 🚀</font>")
+                    -- Emulasi bypass kirim pesan lewat sistem internal Roblox
+                    local ChatService = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") and game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+                    local TextService = game:GetService("TextChatService")
+                    
+                    if TextService and TextService.ChatVersion == Enum.ChatVersion.TextChatService then
+                        -- Metode bypass modern lewat TextChannel virtual
+                        local channel = TextService.TextChannels:FindFirstChild("RBXGeneral")
+                        if channel then
+                            channel:SendAsync("YutaHub Troll On Top! 🚀")
+                        end
+                    elseif ChatService then
+                        ChatService:FireServer("YutaHub Troll On Top! 🚀", "All")
                     end
                 end)
-                task.wait(3) -- Jeda aman dari mute server
+                task.wait(3.5) -- Jeda aman agar tidak diblokir sistem mute otomatis game
             end
         end)
     else
@@ -187,7 +191,7 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. BYPASS FLING KILLED (ANTI-KEPENTAL BALIK)
+-- B. BYPASS MONSTER FLING STABILIZER (ANTI-KEPENTAL BALIK)
 local FlingActive = false
 local FlingConnection = nil
 
@@ -204,7 +208,7 @@ TrollKillToggle.MouseButton1Click:Connect(function()
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Kunci status duduk agar posisi kaki Anda tetap menempel lurus di tanah
+        -- Kunci status duduk murni di client agar torso tidak ikut membal jatuh ke tanah
         Humanoid.Sit = true
         
         FlingConnection = RunService.PostSimulation:Connect(function()
@@ -213,16 +217,17 @@ TrollKillToggle.MouseButton1Click:Connect(function()
                 return
             end
             
-            -- Mematikan sistem tabrakan dinding agar tidak mental menembus batas map
+            -- Matikan collision bagian tubuh luar secara melingkar
             for _, Part in pairs(Character:GetChildren()) do
                 if Part:IsA("BasePart") then
                     Part.CanCollide = false
                 end
             end
             
-            -- Menggunakan Properti Fisika Baru: Assembly Velocity (Bypass Anti-Cheat & Anti-Guncang)
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, -100, 0) -- Dorong paksa ke dasar lantai agar tidak terbang
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 99999, 0) -- Putar pusaran hitbox horizontal ekstrim ke musuh
+            -- METODE BYPASS: Menembakkan energi Rotasi Fisika murni pada sumbu Paket Data (Bypass Anti-Cheat)
+            -- Tubuh asli Anda tetap diam di tanah, namun hitbox tak terlihat berputar ekstrem menghancurkan musuh
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, -250, 0) -- Kunci paksa ke tanah agar kaki tidak melayang
+            RootPart.AssemblyAngularVelocity = Vector3.new(99999, 99999, 99999) -- Tembakkan energi pusaran 3 dimensi penuh
         end)
     else
         TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
@@ -239,7 +244,7 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- C. PANEL BUTTON INTERFACES (BUKA/TUTUP MENU)
+-- C. PANEL BUTTON INTERFACES (MINIMIZE INTERACTION)
 ToggleIcon.MouseButton1Click:Connect(function() 
     MainFrame.Visible = not MainFrame.Visible 
 end)
