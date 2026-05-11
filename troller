@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TROLL_FULL_FIX",
+    Version = "V7.0-TROLL_GHOST_MAX",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "RootPart Collision: ON (Anti-Jatuh ke Bawah Map).\nTubuh Anda tetap kokoh berjalan di tanah, tabrak musuh agar hancur."
+CustomText.Text = "Ghost-Fling Engine: Menembakkan gaya linier searah.\nKarakter berdiri tegak menjaga bobot massa untuk melempar musuh."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -189,7 +189,7 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. BYPASS MONSTER FLING STABILIZER (ANTI-JATUH MENEMBUS LANTAI)
+-- B. BYPASS MONSTER FLING STABILIZER (METODE GHOST-FLING ANTI-KEMBALI KEPENTAL)
 local FlingActive = false
 local FlingConnection = nil
 
@@ -206,7 +206,8 @@ TrollKillToggle.MouseButton1Click:Connect(function()
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        Humanoid.Sit = true
+        -- Pertahankan status berdiri (Physics Mode) agar massa tubuh utuh membanting musuh
+        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         
         FlingConnection = RunService.PostSimulation:Connect(function()
             if not FlingActive or not RootPart.Parent or not Humanoid.Parent then
@@ -214,20 +215,17 @@ TrollKillToggle.MouseButton1Click:Connect(function()
                 return
             end
             
-            -- PROTEKSI COLLISION: Matikan anggota badan, biarkan pondasi dasar (RootPart) menapak lantai
+            -- Matikan sistem tabrakan luar secara real-time
             for _, Part in pairs(Character:GetChildren()) do
                 if Part:IsA("BasePart") then
-                    if Part.Name == "HumanoidRootPart" then
-                        Part.CanCollide = true -- Mencegah meluncur ke bawah peta
-                    else
-                        Part.CanCollide = false
-                    end
+                    Part.CanCollide = false
                 end
             end
             
-            -- Manipulasi Energi Rotasi Horizontal Murni (Bypass Anti-Cheat & Anti-Guncang)
-            RootPart.AssemblyLinearVelocity = Vector3.new(0, -50, 0) -- Stabilizer bawah
-            RootPart.AssemblyAngularVelocity = Vector3.new(0, 95000, 0) -- Putaran silinder horizontal raksasa
+            -- GHOST FLING CORE: Kirim daya dorong linier searah sumbu horizontal X/Z secara konstan
+            -- Server dipaksa membaca area hitbox kita menabrak semua koordinat musuh secara searah
+            RootPart.AssemblyLinearVelocity = Vector3.new(99999, 0, 99999)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0) -- Kunci rotasi agar kamera Anda tetap lurus
         end)
     else
         TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
@@ -238,7 +236,6 @@ TrollKillToggle.MouseButton1Click:Connect(function()
         pcall(function()
             RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            Humanoid.Sit = false
             Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
             
             for _, Part in pairs(Character:GetChildren()) do
@@ -248,7 +245,7 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- C. PANEL BUTTON INTERFACES (MINIMIZE INTERACTION)
+-- C. PANEL BUTTON INTERFACES (BUKA/TUTUP MENU)
 ToggleIcon.MouseButton1Click:Connect(function() 
     MainFrame.Visible = not MainFrame.Visible 
 end)
