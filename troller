@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-STABLE_TOUCH_FLING",
+    Version = "V7.0-BACON_FLING_MAX",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -129,7 +129,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
+TrollKillToggle.Text = "BACON FLING AURA: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -141,7 +141,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Sub-Floor Physics Engine: Karakter berdiri tegak & jalan mulus.\nPeluru fling disembunyikan di bawah kaki agar tubuh tidak bergetar."
+CustomText.Text = "Pal Hair Variant Detection: Khusus untuk pengguna Avatar Bacon.\nJalan 100% mulus normal tanpa kedipan, tabrak musuh untuk membanting asli."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -182,9 +182,9 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. REVOLUTIONARY SUB-FLOOR TOUCH FLING (100% TEGAK LURUS & NYATA)
-local TouchFlingActive = false
-local FlingHeartbeat = nil
+-- B. ENGINE REAL FE BACON HAIR FLING (NO-BLINK & SERVER-SIDED REAL KILL)
+local HatFlingActive = false
+local HatConnection = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
@@ -193,53 +193,63 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     
     if not RootPart or not Humanoid then return end
     
-    TouchFlingActive = not TouchFlingActive
-    if TouchFlingActive then
-        TrollKillToggle.Text = "TOUCH FLING AURA: ACTIVE"
+    HatFlingActive = not HatFlingActive
+    if HatFlingActive then
+        HatFlingActive = true
+        TrollKillToggle.Text = "BACON FLING: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        FlingHeartbeat = RunService.Heartbeat:Connect(function()
-            if not TouchFlingActive or not RootPart.Parent or not Humanoid.Parent then
-                if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
-                return
+        -- Deteksi khusus untuk mencari model rambut Pal Hair (Bacon) Anda
+        local BaconHair = Character:FindFirstChild("PalHair") or Character:FindFirstChildOfClass("Accessory")
+        local Handle = BaconHair and BaconHair:FindFirstChild("Handle")
+        
+        if Handle then
+            -- Cari dan hancurkan las penyambung rambut agar terlepas bebas
+            for _, Weld in pairs(Handle:GetDescendants()) do
+                if Weld:IsA("Weld") or Weld:IsA("ManualWeld") or Weld:IsA("WeldConstraint") then
+                    Weld:Destroy()
+                end
             end
             
-            -- 1. Kunci pondasi utama (Kaki) agar tetap normal menapak tanah
-            RootPart.CanCollide = true
-            
-            -- 2. Cari bagian tubuh pelapis (misal: Tangan kanan / Kaki kiri)
-            local LimbPart = Character:FindFirstChild("Right Arm") or Character:FindFirstChild("RightUpperArm") or Character:FindFirstChild("Torso")
-            
-            if LimbPart and LimbPart:IsA("BasePart") then
+            HatConnection = RunService.Heartbeat:Connect(function()
+                if not HatFlingActive or not RootPart.Parent or not Handle.Parent then
+                    if HatConnection then HatConnection:Disconnect() HatConnection = nil end
+                    return
+                end
+                
+                -- Karakter utama dikunci agar CanCollide bernilai true (Anti-Bergetar / Anti-Blink)
+                RootPart.CanCollide = true
+                
                 pcall(function()
-                    -- Matikan collision anggota tubuh agar bisa masuk ke hitbox musuh
-                    LimbPart.CanCollide = false
+                    -- Bebaskan rambut dari tabrakan dinding agar bisa menyatu masuk ke hitbox musuh
+                    Handle.CanCollide = false
                     
-                    -- METODE SUB-FLOOR GLITCH:
-                    -- Mematahkan posisi visual LimbPart murni ke arah bawah lantai sebesar 1.5 stud
-                    -- Tubuh utama Anda tetap tegak lurus, tapi peluru fling ditarik ke tanah tepat di bawah kaki Anda
-                    LimbPart.CFrame = RootPart.CFrame * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                    -- Pindahkan rambut melayang horizontal melingkar tepat di sekitar tubuh Anda
+                    Handle.CFrame = RootPart.CFrame * CFrame.new(0, -0.5, 0) * CFrame.Angles(math.rad(tick()*450), math.rad(tick()*450), 0)
                     
-                    -- Tembakkan rotasi ekstrim murni pada objek tersembunyi tersebut
-                    LimbPart.Velocity = Vector3.new(0, 0, 0)
-                    LimbPart.RotVelocity = Vector3.new(99999, 99999, 99999)
+                    -- Tembakkan energi putaran fisik limit penuh pada rambut Bacon Anda
+                    Handle.Velocity = Vector3.new(0, 0, 0)
+                    Handle.RotVelocity = Vector3.new(99999, 99999, 99999)
                 end)
-            end
-            
-            -- Cegah server menidurkan jaringan fisika
-            settings().Physics.AllowSleep = false
-        end)
+                
+                settings().Physics.AllowSleep = false
+            end)
+        else
+            -- Proteksi jika rambut terlepas sebelum script dinyalakan
+            HatFlingActive = false
+            TrollKillToggle.Text = "BACON FLING AURA: OFF"
+            TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
+        end
     else
-        TrollKillToggle.Text = "TOUCH FLING AURA: OFF"
+        TrollKillToggle.Text = "BACON FLING AURA: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
-        pcall(function()
-            RootPart.RotVelocity = Vector3.new(0, 0, 0)
-            Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end)
+        if HatConnection then HatConnection:Disconnect() HatConnection = nil end
+        -- Otomatis respawn hidup kembali untuk merapikan susunan rambut setelah dipakai bertanding
+        if Humanoid then Humanoid:BreakJoints() end
     end
 end)
 
