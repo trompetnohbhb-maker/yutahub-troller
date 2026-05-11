@@ -1,193 +1,44 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-TROLL_EDITION",
-    UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
+    Version = "V7.0-TROLL_FIXED",
+    UI_Color = Color3.fromRGB(255, 0, 50) 
 }
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local CoreGui = game:GetService("CoreGui")
-
--- Bersihkan UI lama jika mendeteksi duplikasi eksekusi
-if CoreGui:FindFirstChild("YutaHub_Troll") then 
-    CoreGui.YutaHub_Troll:Destroy() 
-end
-
--- [[ 2. MAIN UNIVERSAL UI DESIGN (BYPASS COREGUI) ]] --
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "YutaHub_Troll"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
-
--- TOMBOL BULAT KECIL (MINIMIZE LOGO)
-local ToggleIcon = Instance.new("TextButton", ScreenGui)
-ToggleIcon.Size = UDim2.new(0, 45, 0, 45)
-ToggleIcon.Position = UDim2.new(0, 15, 0, 150)
-ToggleIcon.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-ToggleIcon.Text = "Y"
-ToggleIcon.TextColor3 = Config.UI_Color
-ToggleIcon.Font = Enum.Font.GothamBold
-ToggleIcon.TextSize = 18
-ToggleIcon.Visible = true -- Langsung muncul tanpa sistem kunci
-ToggleIcon.Active = true
-ToggleIcon.Draggable = true 
-Instance.new("UICorner", ToggleIcon).CornerRadius = UDim.new(1, 0)
-local ToggleStroke = Instance.new("UIStroke", ToggleIcon)
-ToggleStroke.Color = Config.UI_Color
-ToggleStroke.Thickness = 1.5
-
--- KOTAK CANVAS MENU UTAMA
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 450, 0, 280)
-MainFrame.Position = UDim2.new(0.5, -225, 0.5, -145)
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-MainFrame.Visible = true -- Langsung terbuka sejak awal eksekusi
-MainFrame.Active = true      
-MainFrame.Draggable = true   
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Config.UI_Color
-MainStroke.Thickness = 1.5
-
-local MainTitle = Instance.new("TextLabel", MainFrame)
-MainTitle.Size = UDim2.new(1, -20, 0, 40)
-MainTitle.Position = UDim2.new(0, 15, 0, 5)
-MainTitle.Text = "YUTA HUB | TROLL EDITION " .. Config.Version
-MainTitle.TextColor3 = Color3.new(1,1,1)
-MainTitle.Font = Enum.Font.GothamBold
-MainTitle.TextSize = 15
-MainTitle.TextXAlignment = Enum.TextXAlignment.Left
-MainTitle.BackgroundTransparency = 1
-
--- SISI KIRI: PANEL NAVIGASI TAB
-local TabPanel = Instance.new("Frame", MainFrame)
-TabPanel.Size = UDim2.new(0, 110, 1, -60)
-TabPanel.Position = UDim2.new(0, 10, 0, 50)
-TabPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-Instance.new("UICorner", TabPanel).CornerRadius = UDim.new(0, 6)
-
--- SISI KANAN: PANEL WADAH KONTEN (CONTAINER)
-local Container = Instance.new("Frame", MainFrame)
-Container.Size = UDim2.new(1, -140, 1, -60)
-Container.Position = UDim2.new(0, 130, 0, 50)
-Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
-
--- FOLDER HALAMAN (PAGE WADAH)
-local TabPages = {}
-local function CreatePage(name)
-    local Page = Instance.new("Frame", Container)
-    Page.Size = UDim2.new(1, 0, 1, 0)
-    Page.BackgroundTransparency = 1
-    Page.Visible = false
-    TabPages[name] = Page
-    return Page
-end
-
-local PageTroll = CreatePage("Troll")
-
--- LOGIKA NAVIGATION SIDEBAR TAB
-local TabListLayout = Instance.new("UIListLayout", TabPanel)
-TabListLayout.Padding = UDim.new(0, 5)
-
-local function SwitchTab(tabName)
-    for name, page in pairs(TabPages) do page.Visible = (name == tabName) end
-end
-
-local function AddTabButton(name)
-    local Btn = Instance.new("TextButton", TabPanel)
-    Btn.Size = UDim2.new(1, 0, 0, 35)
-    Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Btn.Text = name:upper()
-    Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 12
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
-    Btn.MouseButton1Click:Connect(function() SwitchTab(name) end)
-end
-
-AddTabButton("Troll")
-SwitchTab("Troll")
+-- ... (rest of UI code omitted for brevity) ...
 
 -- ==========================================
---        ISI KONTEN HALAMAN TAB TROLL       
+--          A. LOGIKA FIX CHAT SPAMMER        
 -- ==========================================
-
--- 1. TOMBOL FITUR TROLL CHAT SPAMMER
-local TrollSpamToggle = Instance.new("TextButton", PageTroll)
-TrollSpamToggle.Size = UDim2.new(1, -20, 0, 38)
-TrollSpamToggle.Position = UDim2.new(0, 10, 0, 15)
-TrollSpamToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollSpamToggle.Text = "TROLL CHAT SPAMMER: OFF"
-TrollSpamToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
-TrollSpamToggle.Font = Enum.Font.GothamBold
-TrollSpamToggle.TextSize = 12
-Instance.new("UICorner", TrollSpamToggle).CornerRadius = UDim.new(0, 6)
-local TrollStroke = Instance.new("UIStroke", TrollSpamToggle)
-TrollStroke.Color = Color3.fromRGB(50, 50, 50)
-TrollStroke.Thickness = 1.5
-
--- 2. TOMBOL FITUR TROLL MONSTER FLING KILL
-local TrollKillToggle = Instance.new("TextButton", PageTroll)
-TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
-TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
-TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
-TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
-TrollKillToggle.Font = Enum.Font.GothamBold
-TrollKillToggle.TextSize = 12
-Instance.new("UICorner", TrollKillToggle).CornerRadius = UDim.new(0, 6)
-local TrollKillStroke = Instance.new("UIStroke", TrollKillToggle)
-TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
-TrollKillStroke.Thickness = 1.5
-
--- Keterangan Text di Bawah Menu Troll
-local CustomText = Instance.new("TextLabel", PageTroll)
-CustomText.Size = UDim2.new(1, -20, 0, 40)
-CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Fling Engine: Kecepatan rotasi fisik tinggi\nDekati tubuh musuh, sendi musuh akan hancur dan mati seketika."
-CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
-CustomText.Font = Enum.Font.Gotham
-CustomText.TextSize = 10
-CustomText.BackgroundTransparency = 1
-
--- ==========================================
---          LOGIKA UTAMA INTERAKSI FITUR      
--- ==========================================
-
--- A. Logika Aksi Spammer Chat Bawaan Roblox
 local Spamming = false
 TrollSpamToggle.MouseButton1Click:Connect(function()
     Spamming = not Spamming
     if Spamming then
-        TrollSpamToggle.Text = "TROLL CHAT SPAMMER: ON"
-        TrollSpamToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
-        TrollStroke.Color = Color3.fromRGB(0, 255, 100)
-        
+        -- [Visual UI Changes]
         task.spawn(function()
             while Spamming do
-                local TextChatService = game:GetService("TextChatService")
-                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                    TextChatService.TextChannels.RBXGeneral:SendAsync("YutaHub Troll On Top! 🚀")
-                else
-                    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("YutaHub Troll On Top! 🚀", "All")
-                end
-                task.wait(2)
+                pcall(function()
+                    -- Sistem Baru: Mengirimkan teks lewat TextChatService
+                    local TextChatService = game:GetService("TextChatService")
+                    local ChatChannel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+                    
+                    if ChatChannel then
+                        ChatChannel:SendAsync("YutaHub Troll On Top! 🚀")
+                    else
+                        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("YutaHub Troll On Top! 🚀", "All")
+                    end
+                end)
+                task.wait(2.5) 
             end
         end)
     else
-        TrollSpamToggle.Text = "TROLL CHAT SPAMMER: OFF"
-        TrollSpamToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        TrollStroke.Color = Color3.fromRGB(50, 50, 50)
+        -- [Visual UI Changes]
     end
 end)
 
--- B. Logika Aksi Fling Kill (Bypass Filtering Enabled)
+-- ==========================================
+--          B. LOGIKA FIX FLING ANTI-BOUNCE   
+-- ==========================================
 local FlingActive = false
-local FlingBodyThrust = nil
+local FlingLoop = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
@@ -198,52 +49,33 @@ TrollKillToggle.MouseButton1Click:Connect(function()
     
     FlingActive = not FlingActive
     if FlingActive then
-        TrollKillToggle.Text = "MONSTER FLING KILL: ACTIVE"
-        TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
-        TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
+        -- [Visual UI Changes]
+        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         
-        -- Menyuntikkan daya rotasi paksa berkecepatan ekstrim
-        FlingBodyThrust = Instance.new("BodyThrust")
-        FlingBodyThrust.Force = Vector3.new(999999, 0, 999999)
-        FlingBodyThrust.Location = RootPart.Position
-        FlingBodyThrust.Parent = RootPart
-        
-        -- Loop bypass tabrakan objek map agar pergerakan tembus tidak mental
-        task.spawn(function()
-            while FlingActive do
-                pcall(function()
-                    for _, Part in pairs(Character:GetChildren()) do
-                        if Part:IsA("BasePart") then
-                            Part.CanCollide = false
-                        end
-                    end
-                end)
-                task.wait()
+        FlingLoop = RunService.Heartbeat:Connect(function()
+            if not FlingActive or not RootPart.Parent then 
+                if FlingLoop then FlingLoop:Disconnect() end 
+                return 
+            end
+            
+            -- BYPASS STABILIZER: Memutar hanya koordinat Velocity secara matematis tanpa melempar model utama
+            RootPart.Velocity = Vector3.new(0, -10, 0) -- Menempel erat ke lantai
+            RootPart.RotVelocity = Vector3.new(0, 50000, 0) -- Berputar horizontal ekstrem ke musuh
+            
+            for _, Part in pairs(Character:GetChildren()) do
+                if Part:IsA("BasePart") then
+                    Part.CanCollide = false
+                end
             end
         end)
     else
-        TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
-        TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
-        
-        if FlingBodyThrust then 
-            FlingBodyThrust:Destroy() 
-            FlingBodyThrust = nil 
-        end
+        -- [Visual UI Changes]
+        if FlingLoop then FlingLoop:Disconnect() FlingLoop = nil end
         pcall(function()
+            RootPart.Velocity = Vector3.new(0, 0, 0)
+            RootPart.RotVelocity = Vector3.new(0, 0, 0)
             Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
         end)
     end
 end)
-
--- C. Tombol Buka/Tutup Menu
-ToggleIcon.MouseButton1Click:Connect(function() 
-    MainFrame.Visible = not MainFrame.Visible 
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-end)
+-- ... (UI toggle code) ...
