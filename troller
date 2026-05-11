@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-PURE_STABLE",
+    Version = "V7.0-FE_REAL_FLING",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -16,7 +16,7 @@ if CoreGui:FindFirstChild("YutaHub_Troll") then
     CoreGui.YutaHub_Troll:Destroy() 
 end
 
--- [[ 2. MAIN UNIVERSAL UI DESIGN (BYPASS COREGUI) ]] --
+-- [[ 2. MAIN UNIVERSAL UI DESIGN ]] --
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "YutaHub_Troll"
 ScreenGui.ResetOnSpawn = false
@@ -62,21 +62,18 @@ MainTitle.TextSize = 15
 MainTitle.TextXAlignment = Enum.TextXAlignment.Left
 MainTitle.BackgroundTransparency = 1
 
--- SISI KIRI: PANEL NAVIGASI TAB
 local TabPanel = Instance.new("Frame", MainFrame)
 TabPanel.Size = UDim2.new(0, 110, 1, -60)
 TabPanel.Position = UDim2.new(0, 10, 0, 50)
 TabPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 Instance.new("UICorner", TabPanel).CornerRadius = UDim.new(0, 6)
 
--- SISI KANAN: PANEL WADAH KONTEN (CONTAINER)
 local Container = Instance.new("Frame", MainFrame)
 Container.Size = UDim2.new(1, -140, 1, -60)
 Container.Position = UDim2.new(0, 130, 0, 50)
 Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
 
--- FOLDER HALAMAN (PAGE WADAH)
 local TabPages = {}
 local function CreatePage(name)
     local Page = Instance.new("Frame", Container)
@@ -89,7 +86,6 @@ end
 
 local PageTroll = CreatePage("Troll")
 
--- LOGIKA NAVIGATION SIDEBAR TAB
 local TabListLayout = Instance.new("UIListLayout", TabPanel)
 TabListLayout.Padding = UDim.new(0, 5)
 
@@ -133,7 +129,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "PURE TOUCH FLING: OFF"
+TrollKillToggle.Text = "REAL TOUCH FLING: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -145,7 +141,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "CFrame Teleport Aura: Tubuh Anda 100% normal dan tenang.\nMusuh yang berani mendekat/menyenggol akan langsung mental lenyap!"
+CustomText.Text = "FE Server-Sided Fling: Real memantulkan musuh di layar semua orang.\nBerjalan tegak lurus secara normal, senggol musuh untuk mengeliminasi."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -155,7 +151,6 @@ CustomText.BackgroundTransparency = 1
 --          LOGIKA UTAMA INTERAKSI FITUR      
 -- ==========================================
 
--- A. CHAT SPAMMER BYPASS
 local Spamming = false
 TrollSpamToggle.MouseButton1Click:Connect(function()
     Spamming = not Spamming
@@ -187,69 +182,62 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. SCRIPT PURE TOUCH FLING (100% DIAM, JALAN LURUS NORMAL, MUSUH MENYENTUH LANGSUNG TERBANG)
-local TouchFlingActive = false
-local TouchConnection = nil
-local DetectionRadius = 4.5 -- Jarak radius sentuh (stud) di sekeliling tubuh Anda
+-- B. ENGINE REAL FE SERVER-SIDED FLING (NYATA & MATI)
+local FEFlingActive = false
+local FlingHeartbeat = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
     local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
     
-    if not RootPart then return end
+    if not RootPart or not Humanoid then return end
     
-    TouchFlingActive = not TouchFlingActive
-    if TouchFlingActive then
-        TrollKillToggle.Text = "PURE TOUCH FLING: ACTIVE"
+    FEFlingActive = not FEFlingActive
+    if FEFlingActive then
+        TrollKillToggle.Text = "REAL TOUCH FLING: ACTIVE"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        TouchConnection = RunService.Heartbeat:Connect(function()
-            if not TouchFlingActive or not RootPart.Parent then
-                if TouchConnection then TouchConnection:Disconnect() TouchConnection = nil end
+        -- Memaksa server memvalidasi pergerakan fisik karakter Anda
+        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        
+        FlingHeartbeat = RunService.Heartbeat:Connect(function()
+            if not FEFlingActive or not RootPart.Parent or not Humanoid.Parent then
+                if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
                 return
             end
             
-            -- Pindai seluruh pemain di server secara konstan
-            for _, Player in pairs(Players:GetPlayers()) do
-                if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass("Humanoid") then
-                    local EnemyRoot = Player.Character.HumanoidRootPart
-                    local EnemyHumanoid = Player.Character:FindFirstChildOfClass("Humanoid")
-                    
-                    if EnemyHumanoid.Health > 0 then
-                        -- Hitung jarak matematika antara koordinat Anda dengan koordinat musuh
-                        local Distance = (RootPart.Position - EnemyRoot.Position).Magnitude
-                        
-                        -- Jika musuh sangat dekat (menyenggol/menyentuh radius tubuh Anda)
-                        if Distance <= DetectionRadius then
-                            pcall(function()
-                                -- METODE CFRAME BOUNCE: Melempar koordinat paket data musuh bolak-balik sejauh jutaan stud
-                                -- Tubuh Anda tidak disentuh fisik sama sekali sehingga tidak akan bergetar/bergerak tidak jelas
-                                EnemyRoot.AssemblyLinearVelocity = Vector3.new(0, 999999, 0) -- Dorong paksa ke langit atas
-                                EnemyRoot.CFrame = EnemyRoot.CFrame * CFrame.new(0, 500, 0) -- Teleportasi instan di jaringan server
-                            end)
-                        end
-                    end
-                end
-            end
+            -- Pertahankan pondasi koordinat agar di layar Anda tetap berjalan normal menapak tanah
+            RootPart.CanCollide = true
+            
+            -- SUNTIKAN FORMULA SEGI EMPAT (SERVER-SIDED BYPASS):
+            -- Kita mengubah nilai Velocity horizontal ke batas limit maksimum fisika mesin Roblox.
+            -- Karena karakter ini adalah milik Anda, server WAJIB menerima data bahwa tubuh Anda sekeras peluru.
+            -- Di layar Anda jalan biasa, tapi di server objek Anda bergetar secepat kilat menghancurkan musuh.
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 99999, 0) -- Putaran horizontal nyata yang merusak hitbox musuh
+            
+            -- Dorong paksa data paket ke server agar tidak terjadi delay visual pada musuh
+            settings().Physics.AllowSleep = false
+            settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Disabled
         end)
     else
-        TrollKillToggle.Text = "PURE TOUCH FLING: OFF"
+        TrollKillToggle.Text = "REAL TOUCH FLING: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if TouchConnection then TouchConnection:Disconnect() TouchConnection = nil end
+        if FlingHeartbeat then FlingHeartbeat:Disconnect() FlingHeartbeat = nil end
+        pcall(function()
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end)
     end
 end)
 
--- C. PANEL BUTTON INTERFACES (BUKA/TUTUP MENU)
-ToggleIcon.MouseButton1Click:Connect(function() 
-    MainFrame.Visible = not MainFrame.Visible 
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
-        MainFrame.Visible = not MainFrame.Visible
-    end
+ToggleIcon.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+UserInputService.InputBegan:Connect(function(input, gP)
+    if gP then return end
+    if input.KeyCode == Enum.KeyCode.Insert then MainFrame.Visible = not MainFrame.Visible end
 end)
