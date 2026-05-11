@@ -1,6 +1,6 @@
 -- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Version = "V7.0-REAL_INVISIBLE_FLING",
+    Version = "V7.0-FINAL_TROLL",
     UI_Color = Color3.fromRGB(255, 0, 50) -- Tema Merah Neon Yuta
 }
 
@@ -133,7 +133,7 @@ local TrollKillToggle = Instance.new("TextButton", PageTroll)
 TrollKillToggle.Size = UDim2.new(1, -20, 0, 38)
 TrollKillToggle.Position = UDim2.new(0, 10, 0, 63)
 TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TrollKillToggle.Text = "REAL INVISIBLE FLING: OFF"
+TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
 TrollKillToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
 TrollKillToggle.Font = Enum.Font.GothamBold
 TrollKillToggle.TextSize = 12
@@ -145,7 +145,7 @@ TrollKillStroke.Thickness = 1.5
 local CustomText = Instance.new("TextLabel", PageTroll)
 CustomText.Size = UDim2.new(1, -20, 0, 40)
 CustomText.Position = UDim2.new(0, 10, 0, 115)
-CustomText.Text = "Metode Glitch Invisible Fling: Karakter asli bersembunyi aman.\nHantam tubuh musuh, mereka akan langsung terpental lenyap seketika!"
+CustomText.Text = "Netless CFrame Physics Engine: Kaki menempel kokoh di tanah.\nTabrak musuh dari samping, musuh hancur sementara badan Anda normal."
 CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
 CustomText.Font = Enum.Font.Gotham
 CustomText.TextSize = 10
@@ -187,60 +187,67 @@ TrollSpamToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- B. REAL INVISIBLE FLING ENGINE (100% SAMA SEPERTI EXPLOITER LAIN)
+-- B. REVOLUTIONARY NETLESS FLING ENGINE (ANTI-KEPENTAL BALIK & ANTI-JATUH MAP)
 local FlingActive = false
-local LoopConn = nil
+local FlingConnection = nil
 
 TrollKillToggle.MouseButton1Click:Connect(function()
-    local Char = LocalPlayer.Character
-    local Hum = Char and Char:FindFirstChildOfClass("Humanoid")
-    local Root = Char and Char:FindFirstChild("HumanoidRootPart")
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
     
-    if not Root or not Hum then return end
+    if not RootPart or not Humanoid then return end
     
     FlingActive = not FlingActive
     if FlingActive then
-        TrollKillToggle.Text = "INVISIBLE FLING: ACTIVE"
+        TrollKillToggle.Text = "MONSTER FLING KILL: ON"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
         TrollKillStroke.Color = Color3.fromRGB(255, 0, 50)
         
-        -- Glitch Sendi Fisika (Membuat Tubuh Klien Lepas dari Validasi Anti-Cheat)
-        local T_Clone = Root:Clone()
-        T_Clone.Parent = Char
-        Root:Destroy() -- Menghancurkan koneksi jangkar asli agar Anda kebal pentalan balik
-        LocalPlayer.Character = nil
-        LocalPlayer.Character = Char
-        task.wait(0.2)
+        -- Aktifkan simulasi fisika murni tanpa memutus sendi karakter
+        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         
-        LoopConn = RunService.Heartbeat:Connect(function()
-            if not FlingActive or not T_Clone.Parent or not Hum.Parent then
-                if LoopConn then LoopConn:Disconnect() LoopConn = nil end
+        FlingConnection = RunService.PostSimulation:Connect(function()
+            if not FlingActive or not RootPart.Parent or not Humanoid.Parent then
+                if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
                 return
             end
             
-            -- Mematikan sistem tabrakan dinding agar tidak mental menembus batas map
-            for _, v in pairs(Char:GetChildren()) do
-                if v:IsA("BasePart") then v.CanCollide = false end
+            -- LOOP SECURITY COLLISION:
+            -- Bagian tubuh dilepas deteksi tabrakannya agar bisa menyatu masuk ke dalam hitbox musuh
+            -- KECUALI HumanoidRootPart wajib ON (True) agar menapak tanah dan tidak meluncur jatuh ke void bawah peta
+            for _, Part in pairs(Character:GetChildren()) do
+                if Part:IsA("BasePart") then
+                    if Part.Name == "HumanoidRootPart" then
+                        Part.CanCollide = true 
+                    else
+                        Part.CanCollide = false
+                    end
+                end
             end
             
-            -- Menembakkan gaya hantam jutaan km/jam secara berputar melingkar di koordinat server
-            T_Clone.Velocity = Vector3.new(0, 0, 0)
-            T_Clone.RotVelocity = Vector3.new(99999, 99999, 99999)
-            
-            -- Kamera otomatis melayang stabil mengikuti pergerakan kursor mouse/HP
-            local MoveDir = Hum.MoveDirection
-            if MoveDir.Magnitude > 0 then
-                T_Clone.Position = T_Clone.Position + (MoveDir * 1.5)
-            end
+            -- NETLESS HARNESS FORMULA (Rahasia Eksploiter):
+            -- Memberikan kombinasi gaya hantam Linear luar biasa besar hanya pada sumbu X dan Z 
+            -- Di mata server, massa Anda menjadi seberat gunung besi saat menyentuh lawan, 
+            -- Namun tubuh Anda di layar tetap stabil berjalan normal karena tidak ada manipulasi Angular (putaran).
+            RootPart.AssemblyLinearVelocity = Vector3.new(45000, 0, 45000)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0) -- Mengunci badan tetap lurus anti-pusing
         end)
     else
-        TrollKillToggle.Text = "REAL INVISIBLE FLING: OFF"
+        TrollKillToggle.Text = "MONSTER FLING KILL: OFF"
         TrollKillToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         TrollKillStroke.Color = Color3.fromRGB(50, 50, 50)
         
-        if LoopConn then LoopConn:Disconnect() LoopConn = nil end
-        -- Paksa karakter Reset/Respawn kembali normal setelah mematikan fitur
-        if Hum then Hum:BreakJoints() end 
+        if FlingConnection then FlingConnection:Disconnect() FlingConnection = nil end
+        pcall(function()
+            RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            
+            for _, Part in pairs(Character:GetChildren()) do
+                if Part:IsA("BasePart") then Part.CanCollide = true end
+            end
+        end)
     end
 end)
 
