@@ -1,0 +1,1030 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local YutaPremiumLib = {}
+YutaPremiumLib.__index = YutaPremiumLib
+
+local Theme = {
+    Background = Color3.fromRGB(13, 13, 18),
+    Sidebar = Color3.fromRGB(18, 18, 26),
+    TopBar = Color3.fromRGB(22, 22, 32),
+    Accent = Color3.fromRGB(0, 180, 255),
+    ElementBg = Color3.fromRGB(25, 25, 35),
+    ElementHover = Color3.fromRGB(32, 32, 46),
+    TextMain = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(140, 140, 155),
+    Border = Color3.fromRGB(35, 35, 48),
+    BorderHover = Color3.fromRGB(55, 55, 75)
+}
+
+local AnimInfo = {
+    Fast = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    Smooth = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+}
+
+local function tween(object, info, property)
+    local t = TweenService:Create(object, info, property)
+    t:Play()
+    return t
+end
+
+local function applyAdvancedDrag(triggerObject, targetObject)
+    local dragging = false
+    local dragInput, dragStart, startPos
+    triggerObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = targetObject.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    triggerObject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            tween(targetObject, TweenInfo.new(0.1, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            })
+        end
+    end)
+end
+
+function YutaPremiumLib:CreateWindow(menuTitle)
+    local window = { CurrentTab = nil, Tabs = {}, Active = true, Minimized = false }
+    if CoreGui:FindFirstChild("YutaUltraGui Premium") then CoreGui["YutaUltraGui Premium"]:Destroy() end
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "YutaUltraGui Premium"
+    screenGui.ResetOnSpawn = false
+    screenGui.DisplayOrder = 99999
+    screenGui.Parent = CoreGui
+    window.ScreenGui = screenGui
+
+    local mainFrame = Instance.new("ImageLabel")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 560, 0, 360)
+    mainFrame.Position = UDim2.new(0.5, -280, 0.5, -180)
+    mainFrame.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    mainFrame.ImageTransparency = 0.5
+    mainFrame.BackgroundColor3 = Theme.Background
+    mainFrame.BackgroundTransparency = 0
+    mainFrame.Active = true
+    mainFrame.Parent = screenGui
+    window.MainFrame = mainFrame
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 14)
+    Instance.new("UIStroke", mainFrame).Color = Theme.Border
+    Instance.new("UIStroke", mainFrame).Thickness = 1.2
+
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, 0, 0, 42)
+    topBar.BackgroundColor3 = Theme.TopBar
+    topBar.BackgroundTransparency = 0.4
+    topBar.BorderSizePixel = 0
+    topBar.ZIndex = 2
+    topBar.Parent = mainFrame
+    Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 14)
+    applyAdvancedDrag(topBar, mainFrame)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -120, 1, 0)
+    titleLabel.Position = UDim2.new(0, 18, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = string.upper(menuTitle or "YUTA HUB - STEAL AN EGG")
+    titleLabel.TextColor3 = Theme.TextMain
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.ZIndex = 3
+    titleLabel.Parent = topBar
+
+    local neonLine = Instance.new("Frame")
+    neonLine.Size = UDim2.new(1, 0, 0, 1.5)
+    neonLine.Position = UDim2.new(0, 0, 1, 0)
+    neonLine.BackgroundColor3 = Theme.Accent
+    neonLine.BorderSizePixel = 0
+    neonLine.ZIndex = 5
+    neonLine.Parent = topBar
+
+    local mobileToggleBtn = Instance.new("TextButton")
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 26, 0, 26)
+    closeBtn.Position = UDim2.new(1, -36, 0.5, -11)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = Theme.TextSecondary
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 16
+    closeBtn.ZIndex = 3
+    closeBtn.AutoButtonColor = false
+    closeBtn.Parent = topBar
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+    closeBtn.MouseEnter:Connect(function() tween(closeBtn, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(220, 50, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}) end)
+    closeBtn.MouseLeave:Connect(function() tween(closeBtn, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(28, 28, 38), TextColor3 = Theme.TextSecondary}) end)
+    closeBtn.MouseButton1Click:Connect(function() mobileToggleBtn.Visible = false screenGui:Destroy() window.Active = false end)
+
+    local minBtn = Instance.new("TextButton")
+    minBtn.Size = UDim2.new(0, 26, 0, 26)
+    minBtn.Position = UDim2.new(1, -68, 0.5, -11)
+    minBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    minBtn.Text = "-"
+    minBtn.TextColor3 = Theme.TextSecondary
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.TextSize = 14
+    minBtn.ZIndex = 3
+    minBtn.AutoButtonColor = false
+    minBtn.Parent = topBar
+    Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
+    minBtn.MouseEnter:Connect(function() tween(minBtn, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(38, 38, 52), TextColor3 = Theme.TextMain}) end)
+    minBtn.MouseLeave:Connect(function() tween(minBtn, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(28, 28, 38), TextColor3 = Theme.TextSecondary}) end)
+
+    mobileToggleBtn.Name = "MobileYutaToggle"
+    mobileToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+    mobileToggleBtn.Position = UDim2.new(0, 20, 0, 20)
+    mobileToggleBtn.BackgroundColor3 = Theme.Sidebar
+    mobileToggleBtn.BackgroundTransparency = 0.2
+    mobileToggleBtn.Text = "Y"
+    mobileToggleBtn.TextColor3 = Theme.Accent
+    mobileToggleBtn.Font = Enum.Font.GothamBlack
+    mobileToggleBtn.TextSize = 20
+    mobileToggleBtn.ZIndex = 999
+    mobileToggleBtn.Visible = true
+    mobileToggleBtn.Parent = screenGui
+    Instance.new("UICorner", mobileToggleBtn).CornerRadius = UDim.new(0, 12)
+    Instance.new("UIStroke", mobileToggleBtn).Color = Theme.Border
+    Instance.new("UIStroke", mobileToggleBtn).Thickness = 1.2
+
+    task.spawn(function()
+        while true do
+            if mobileToggleBtn.Visible then
+                tween(mobileToggleBtn, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextColor3 = Theme.TextMain})
+                task.wait(1)
+                tween(mobileToggleBtn, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextColor3 = Theme.Accent})
+                task.wait(1)
+            else
+                task.wait(0.5)
+            end
+        end
+    end)
+    applyAdvancedDrag(mobileToggleBtn, mobileToggleBtn)
+
+    local sidebar = Instance.new("Frame")
+    sidebar.Size = UDim2.new(0, 150, 1, -42)
+    sidebar.Position = UDim2.new(0, 0, 0, 42)
+    sidebar.BackgroundColor3 = Theme.Sidebar
+    sidebar.BackgroundTransparency = 0.4
+    sidebar.BorderSizePixel = 0
+    sidebar.ZIndex = 2
+    sidebar.Parent = mainFrame
+
+    local containerFrame = Instance.new("Frame")
+    containerFrame.Size = UDim2.new(1, -150, 1, -42)
+    containerFrame.Position = UDim2.new(0, 150, 0, 42)
+    containerFrame.BackgroundTransparency = 1
+    containerFrame.ClipsDescendants = true
+    containerFrame.ZIndex = 2
+    containerFrame.Parent = mainFrame
+    window.ContainerFrame = containerFrame
+    window.Sidebar = sidebar
+
+    local function toggleMinimizeState()
+        window.Minimized = not window.Minimized
+        if window.Minimized then
+            sidebar.Visible = false; containerFrame.Visible = false; titleLabel.Visible = false
+            minBtn.Visible = false; closeBtn.Visible = false
+            if neonLine then neonLine.Visible = false end
+            mainFrame.Visible = false; mobileToggleBtn.Visible = true
+        else
+            mainFrame.Visible = true; minBtn.Visible = true; closeBtn.Visible = true
+            tween(mainFrame, AnimInfo.Smooth, {Size = UDim2.new(0, 560, 0, 360)})
+            tween(topBar, AnimInfo.Smooth, {Size = UDim2.new(1, 0, 0, 42)})
+            local mainCornerObj = mainFrame:FindFirstChildOfClass("UICorner")
+            if mainCornerObj then tween(mainCornerObj, AnimInfo.Smooth, {CornerRadius = UDim.new(0, 14)}) end
+            local topCornerObj = topBar:FindFirstChildOfClass("UICorner")
+            if topCornerObj then tween(topCornerObj, AnimInfo.Smooth, {CornerRadius = UDim.new(0, 14)}) end
+            if neonLine then neonLine.Visible = true; tween(neonLine, AnimInfo.Smooth, {Size = UDim2.new(1, 0, 0, 1.5)}) end
+            mobileToggleBtn.Visible = true
+            sidebar.Visible = true; containerFrame.Visible = true; titleLabel.Visible = true
+        end
+    end
+    minBtn.MouseButton1Click:Connect(toggleMinimizeState)
+
+    local waktuMulaiSentuh = 0
+    mobileToggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            waktuMulaiSentuh = tick()
+        end
+    end)
+    mobileToggleBtn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if tick() - waktuMulaiSentuh < 0.22 then toggleMinimizeState() end
+        end
+    end)
+
+    local sidebarLayout = Instance.new("UIListLayout")
+    sidebarLayout.Padding = UDim.new(0, 5)
+    sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sidebarLayout.Parent = sidebar
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 12)
+    sidebarPadding.Parent = sidebar
+    return window
+end
+
+function YutaPremiumLib:CreateTab(window, tabName)
+    local tab = { Window = window, Name = tabName }
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(1, -20, 0, 34)
+    tabBtn.BackgroundColor3 = Theme.ElementBg
+    tabBtn.BackgroundTransparency = 1
+    tabBtn.Text = "   " .. tabName
+    tabBtn.TextColor3 = Theme.TextSecondary
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.TextSize = 12
+    tabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    tabBtn.ZIndex = 3
+    tabBtn.AutoButtonColor = false
+    tabBtn.Parent = window.Sidebar
+    tab.TabButton = tabBtn
+    Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 8)
+
+    local activeIndicator = Instance.new("Frame")
+    activeIndicator.Name = "TabActiveIndicatorFrame"
+    activeIndicator.Size = UDim2.new(0, 3, 0.6, 0)
+    activeIndicator.Position = UDim2.new(0, 0, 0, 7)
+    activeIndicator.BackgroundColor3 = Theme.Accent
+    activeIndicator.BorderSizePixel = 0
+    activeIndicator.BackgroundTransparency = 1
+    activeIndicator.ZIndex = 4
+    activeIndicator.Parent = tabBtn
+    tab.ActiveIndicator = activeIndicator
+
+    local pageScroll = Instance.new("ScrollingFrame")
+    pageScroll.Size = UDim2.new(1, 0, 1, 0)
+    pageScroll.BackgroundTransparency = 1
+    pageScroll.BorderSizePixel = 0
+    pageScroll.ScrollBarThickness = 3
+    pageScroll.ScrollBarImageColor3 = Theme.BorderHover
+    pageScroll.Visible = false
+    pageScroll.ZIndex = 3
+    pageScroll.Parent = window.ContainerFrame
+    tab.PageScroll = pageScroll
+
+    local pageLayout = Instance.new("UIListLayout")
+    pageLayout.Padding = UDim.new(0, 8)
+    pageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    pageLayout.Parent = pageScroll
+    local pagePadding = Instance.new("UIPadding")
+    pagePadding.PaddingTop = UDim.new(0, 14)
+    pagePadding.PaddingBottom = UDim.new(0, 14)
+    pagePadding.Parent = pageScroll
+
+    pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        pageScroll.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 28)
+    end)
+
+    local function activateThisTab()
+        if window.CurrentTab == tab then return end
+        if window.CurrentTab then
+            local oldTab = window.CurrentTab
+            oldTab.PageScroll.Visible = false
+            tween(oldTab.TabButton, AnimInfo.Fast, {BackgroundTransparency = 1, TextColor3 = Theme.TextSecondary})
+            if oldTab.ActiveIndicator then
+                tween(oldTab.ActiveIndicator, AnimInfo.Fast, {BackgroundTransparency = 1})
+            end
+        end
+        window.CurrentTab = tab
+        pageScroll.Visible = true
+        pageScroll.CanvasPosition = Vector2.new(0, -20)
+        tween(pageScroll, AnimInfo.Smooth, {CanvasPosition = Vector2.new(0, 0)})
+        tween(tabBtn, AnimInfo.Fast, {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(24, 25, 38), TextColor3 = Theme.Accent})
+        tween(tab.ActiveIndicator, AnimInfo.Fast, {BackgroundTransparency = 0})
+    end
+
+    tabBtn.MouseEnter:Connect(function()
+        if window.CurrentTab ~= tab then tween(tabBtn, AnimInfo.Fast, {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(18, 19, 28), TextColor3 = Theme.TextMain}) end
+    end)
+    tabBtn.MouseLeave:Connect(function()
+        if window.CurrentTab ~= tab then tween(tabBtn, AnimInfo.Fast, {BackgroundTransparency = 1, TextColor3 = Theme.TextSecondary}) end
+    end)
+    tabBtn.MouseButton1Click:Connect(activateThisTab)
+
+    if #window.Tabs == 0 then activateThisTab() end
+    table.insert(window.Tabs, tab)
+    return tab
+end
+
+function YutaPremiumLib:CreateSection(tab, sectionTitle)
+    local sectionFrame = Instance.new("Frame")
+    sectionFrame.Size = UDim2.new(1, -28, 0, 24)
+    sectionFrame.BackgroundTransparency = 1
+    sectionFrame.ZIndex = 4
+    sectionFrame.Parent = tab.PageScroll
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 0, 1, 0)
+    title.BackgroundTransparency = 1
+    title.Text = string.upper(sectionTitle)
+    title.TextColor3 = Theme.Accent
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 10
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.ZIndex = 4
+    title.Parent = sectionFrame
+    title:GetPropertyChangedSignal("TextBounds"):Connect(function()
+        local boundsX = title.TextBounds.X
+        local line = sectionFrame:FindFirstChild("Line") or Instance.new("Frame")
+        line.Name = "Line"
+        line.Size = UDim2.new(1, -(boundsX + 12), 0, 1)
+        line.Position = UDim2.new(0, boundsX + 12, 0.5, 0)
+        line.BackgroundColor3 = Theme.Border
+        line.BorderSizePixel = 0
+        line.ZIndex = 4
+        line.Parent = sectionFrame
+    end)
+end
+
+function YutaPremiumLib:CreateLabel(tab, labelText)
+    local labelFrame = Instance.new("Frame")
+    labelFrame.Size = UDim2.new(1, -28, 0, 34)
+    labelFrame.BackgroundColor3 = Theme.ElementBg
+    labelFrame.BackgroundTransparency = 0.5
+    labelFrame.ZIndex = 4
+    labelFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", labelFrame).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke", labelFrame); stroke.Color = Theme.Border; stroke.Thickness = 0.8
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1, -24, 1, 0)
+    txt.Position = UDim2.new(0, 12, 0, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = labelText
+    txt.TextColor3 = Theme.TextSecondary
+    txt.Font = Enum.Font.Gotham
+    txt.TextSize = 12
+    txt.TextXAlignment = Enum.TextXAlignment.Left
+    txt.TextWrapped = true
+    txt.ZIndex = 5
+    txt.Parent = labelFrame
+    local element = { Object = labelFrame, TextLabel = txt }
+    function element:UpdateText(newText) txt.Text = newText end
+    return element
+end
+
+function YutaPremiumLib:CreateToggle(tab, toggleText, callback)
+    local callbackFunc = callback or function() end
+    local toggled = false
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(1, -28, 0, 42)
+    toggleFrame.BackgroundColor3 = Theme.ElementBg
+    toggleFrame.BackgroundTransparency = 0.2
+    toggleFrame.ZIndex = 4
+    toggleFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke", toggleFrame); stroke.Color = Theme.Border; stroke.Thickness = 1
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -75, 1, 0)
+    label.Position = UDim2.new(0, 14, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = toggleText
+    label.TextColor3 = Theme.TextSecondary
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 5
+    label.Parent = toggleFrame
+    local switchContainer = Instance.new("TextButton")
+    switchContainer.Size = UDim2.new(0, 38, 0, 22)
+    switchContainer.Position = UDim2.new(1, -52, 0.5, -11)
+    switchContainer.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
+    switchContainer.Text = ""
+    switchContainer.ZIndex = 5
+    switchContainer.AutoButtonColor = false
+    switchContainer.Parent = toggleFrame
+    Instance.new("UICorner", switchContainer).CornerRadius = UDim.new(1, 0)
+    local switchBall = Instance.new("Frame")
+    switchBall.Size = UDim2.new(0, 16, 0, 16)
+    switchBall.Position = UDim2.new(0, 3, 0.5, -8)
+    switchBall.BackgroundColor3 = Color3.fromRGB(180, 180, 185)
+    switchBall.BorderSizePixel = 0
+    switchBall.ZIndex = 6
+    switchBall.Parent = switchContainer
+    Instance.new("UICorner", switchBall).CornerRadius = UDim.new(1, 0)
+
+    local function setState(state)
+        if toggled == state then return end
+        toggled = state
+        if state then
+            tween(switchContainer, AnimInfo.Fast, {BackgroundColor3 = Theme.Accent})
+            tween(switchBall, AnimInfo.Fast, {Position = UDim2.new(1, -19, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+            tween(label, AnimInfo.Fast, {TextColor3 = Theme.TextMain})
+        else
+            tween(switchContainer, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(38, 38, 50)})
+            tween(switchBall, AnimInfo.Fast, {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(180, 180, 185)})
+            tween(label, AnimInfo.Fast, {TextColor3 = Theme.TextSecondary})
+        end
+        task.spawn(function() callbackFunc(state) end)
+    end
+
+    local function triggerToggle()
+        if tab.Window.Minimized then return end
+        setState(not toggled)
+    end
+
+    switchContainer.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            triggerToggle()
+        end
+    end)
+end
+
+function YutaPremiumLib:CreateButton(tab, buttonText, callback)
+    local btnFrame = Instance.new("TextButton")
+    btnFrame.Size = UDim2.new(1, -28, 0, 38)
+    btnFrame.BackgroundColor3 = Theme.ElementBg
+    btnFrame.BackgroundTransparency = 0.2
+    btnFrame.Text = "  " .. buttonText
+    btnFrame.TextColor3 = Theme.TextMain
+    btnFrame.Font = Enum.Font.GothamBold
+    btnFrame.TextSize = 12
+    btnFrame.TextXAlignment = Enum.TextXAlignment.Left
+    btnFrame.ZIndex = 4
+    btnFrame.AutoButtonColor = false
+    btnFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 8)
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = Theme.Border
+    btnStroke.Thickness = 1
+    btnStroke.Parent = btnFrame
+    btnFrame.MouseEnter:Connect(function() tween(btnFrame, AnimInfo.Fast, {BackgroundColor3 = Theme.ElementHover}) tween(btnStroke, AnimInfo.Fast, {Color = Theme.BorderHover}) end)
+    btnFrame.MouseLeave:Connect(function() tween(btnFrame, AnimInfo.Fast, {BackgroundColor3 = Theme.ElementBg}) tween(btnStroke, AnimInfo.Fast, {Color = Theme.Border}) end)
+    btnFrame.MouseButton1Click:Connect(function()
+        task.spawn(callback or function() end)
+    end)
+end
+
+function YutaPremiumLib:CreateDropdown(tab, dropdownText, optionsTable, callback)
+    local dropdown = { Opened = false, Options = optionsTable }
+    local selected = nil
+    local dropdownFrame = Instance.new("Frame")
+    dropdownFrame.Size = UDim2.new(1, -28, 0, 42)
+    dropdownFrame.BackgroundColor3 = Theme.ElementBg
+    dropdownFrame.BackgroundTransparency = 0.2
+    dropdownFrame.ClipsDescendants = true
+    dropdownFrame.ZIndex = 4
+    dropdownFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke", dropdownFrame); stroke.Color = Theme.Border; stroke.Thickness = 1
+
+    local triggerBtn = Instance.new("TextButton")
+    triggerBtn.Size = UDim2.new(1, 0, 0, 42)
+    triggerBtn.BackgroundTransparency = 1
+    triggerBtn.Text = "  " .. dropdownText .. " : SELECT ▼"
+    triggerBtn.TextColor3 = Theme.TextSecondary
+    triggerBtn.Font = Enum.Font.GothamBold
+    triggerBtn.TextSize = 12
+    triggerBtn.TextXAlignment = Enum.TextXAlignment.Left
+    triggerBtn.ZIndex = 5
+    triggerBtn.AutoButtonColor = false
+    triggerBtn.Parent = dropdownFrame
+    dropdown.TriggerBtn = triggerBtn
+
+    local listScroll = Instance.new("ScrollingFrame")
+    listScroll.Size = UDim2.new(1, -16, 0, 105)
+    listScroll.Position = UDim2.new(0, 8, 0, 46)
+    listScroll.BackgroundColor3 = Theme.Sidebar
+    listScroll.BackgroundTransparency = 0.3
+    listScroll.BorderSizePixel = 0
+    listScroll.ScrollBarThickness = 2
+    listScroll.ScrollBarImageColor3 = Theme.BorderHover
+    listScroll.ZIndex = 6
+    listScroll.Parent = dropdownFrame
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 4)
+    listLayout.Parent = listScroll
+
+    local function rebuild()
+        for _, child in ipairs(listScroll:GetChildren()) do
+            if child:IsA("TextButton") then child:Destroy() end
+        end
+        for _, optionName in ipairs(dropdown.Options) do
+            local optBtn = Instance.new("TextButton")
+            optBtn.Size = UDim2.new(1, 0, 0, 28)
+            optBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
+            optBtn.Text = "  " .. string.upper(optionName)
+            optBtn.TextColor3 = Theme.TextSecondary
+            optBtn.Font = Enum.Font.Gotham
+            optBtn.TextSize = 11
+            optBtn.TextXAlignment = Enum.TextXAlignment.Left
+            optBtn.ZIndex = 7
+            optBtn.AutoButtonColor = false
+            optBtn.Parent = listScroll
+            Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 5)
+            optBtn.MouseEnter:Connect(function() tween(optBtn, AnimInfo.Fast, {BackgroundColor3 = Theme.ElementHover, TextColor3 = Theme.TextMain}) end)
+            optBtn.MouseLeave:Connect(function() tween(optBtn, AnimInfo.Fast, {BackgroundColor3 = Color3.fromRGB(30, 30, 42), TextColor3 = Theme.TextSecondary}) end)
+            optBtn.MouseButton1Click:Connect(function()
+                triggerBtn.Text = "  " .. dropdownText .. " : " .. string.upper(optionName) .. " ▼"
+                dropdown.Opened = false
+                tween(dropdownFrame, AnimInfo.Smooth, {Size = UDim2.new(1, -28, 0, 42)})
+                selected = optionName
+                task.spawn(function() callback(optionName) end)
+            end)
+        end
+        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+    end
+
+    rebuild()
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+    end)
+
+    triggerBtn.MouseButton1Click:Connect(function()
+        dropdown.Opened = not dropdown.Opened
+        if dropdown.Opened then
+            triggerBtn.Text = "  " .. dropdownText .. " : SELECT ▲"
+            tween(dropdownFrame, AnimInfo.Smooth, {Size = UDim2.new(1, -28, 0, 160)})
+        else
+            triggerBtn.Text = "  " .. dropdownText .. " : " .. (selected and string.upper(selected) or "SELECT") .. " ▼"
+            tween(dropdownFrame, AnimInfo.Smooth, {Size = UDim2.new(1, -28, 0, 42)})
+        end
+    end)
+end
+
+function YutaPremiumLib:CreateTextBox(tab, labelText, placeholder, callback)
+    local boxFrame = Instance.new("Frame")
+    boxFrame.Size = UDim2.new(1, -28, 0, 42)
+    boxFrame.BackgroundColor3 = Theme.ElementBg
+    boxFrame.BackgroundTransparency = 0.2
+    boxFrame.ZIndex = 4
+    boxFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", boxFrame).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke", boxFrame); stroke.Color = Theme.Border; stroke.Thickness = 1
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 90, 1, 0)
+    label.Position = UDim2.new(0, 14, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Theme.TextSecondary
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 5
+    label.Parent = boxFrame
+
+    local textBox = Instance.new("TextBox")
+    textBox.Size = UDim2.new(1, -120, 1, -10)
+    textBox.Position = UDim2.new(0, 110, 0.5, -16)
+    textBox.BackgroundColor3 = Color3.fromRGB(32, 32, 44)
+    textBox.BackgroundTransparency = 0.3
+    textBox.Text = ""
+    textBox.PlaceholderText = placeholder or "Enter value..."
+    textBox.PlaceholderColor3 = Theme.TextSecondary
+    textBox.TextColor3 = Theme.TextMain
+    textBox.Font = Enum.Font.Gotham
+    textBox.TextSize = 12
+    textBox.TextXAlignment = Enum.TextXAlignment.Left
+    textBox.ClearTextOnFocus = false
+    textBox.ZIndex = 5
+    textBox.Parent = boxFrame
+    Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 6)
+
+    textBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local val = tonumber(textBox.Text)
+            if val then
+                callback(val)
+            end
+        end
+    end)
+
+    return textBox
+end
+
+function YutaPremiumLib:CreateMultiSelectDropdown(tab, dropdownText, optionsTable, callback)
+    local dropdown = {Opened = false, Checkboxes = {}, Options = optionsTable}
+    local selected = {}
+    local dropdownFrame = Instance.new("Frame")
+    dropdownFrame.Size = UDim2.new(1, -28, 0, 42)
+    dropdownFrame.BackgroundColor3 = Theme.ElementBg
+    dropdownFrame.BackgroundTransparency = 0.2
+    dropdownFrame.ClipsDescendants = true
+    dropdownFrame.ZIndex = 4
+    dropdownFrame.Parent = tab.PageScroll
+    Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0, 8)
+    local frameStroke = Instance.new("UIStroke")
+    frameStroke.Color = Theme.Border
+    frameStroke.Thickness = 1
+    frameStroke.Parent = dropdownFrame
+    local triggerBtn = Instance.new("TextButton")
+    triggerBtn.Size = UDim2.new(1, 0, 0, 42)
+    triggerBtn.BackgroundTransparency = 1
+    triggerBtn.Text = "  " .. dropdownText .. " (0 selected) ▼"
+    triggerBtn.TextColor3 = Theme.TextSecondary
+    triggerBtn.Font = Enum.Font.GothamBold
+    triggerBtn.TextSize = 12
+    triggerBtn.TextXAlignment = Enum.TextXAlignment.Left
+    triggerBtn.ZIndex = 5
+    triggerBtn.AutoButtonColor = false
+    triggerBtn.Parent = dropdownFrame
+    dropdown.TriggerBtn = triggerBtn
+    local listScroll = Instance.new("ScrollingFrame")
+    listScroll.Size = UDim2.new(1, -16, 0, 0)
+    listScroll.Position = UDim2.new(0, 8, 0, 46)
+    listScroll.BackgroundColor3 = Theme.Sidebar
+    listScroll.BackgroundTransparency = 0.3
+    listScroll.BorderSizePixel = 0
+    listScroll.ScrollBarThickness = 2
+    listScroll.ScrollBarImageColor3 = Theme.BorderHover
+    listScroll.ZIndex = 6
+    listScroll.Visible = false
+    listScroll.Parent = dropdownFrame
+    dropdown.ListScroll = listScroll
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 4)
+    listLayout.Parent = listScroll
+    local function updateSelectedText()
+        local count = 0
+        for _, v in pairs(selected) do if v then count = count + 1 end end
+        triggerBtn.Text = "  " .. dropdownText .. " (" .. count .. " selected) ▼"
+        if callback then callback(selected) end
+    end
+    local function rebuildOptions()
+        for _, item in ipairs(dropdown.Checkboxes) do item.checkbox:Destroy() end
+        table.clear(dropdown.Checkboxes)
+        for _, optionName in ipairs(dropdown.Options) do
+            local row = Instance.new("TextButton")
+            row.Size = UDim2.new(1, 0, 0, 28)
+            row.BackgroundTransparency = 1
+            row.Text = ""
+            row.ZIndex = 7
+            row.AutoButtonColor = false
+            row.Parent = listScroll
+            local checkbox = Instance.new("TextButton")
+            checkbox.Size = UDim2.new(0, 18, 0, 18)
+            checkbox.Position = UDim2.new(0, 6, 0.5, -9)
+            checkbox.BackgroundColor3 = selected[optionName] and Theme.Accent or Color3.fromRGB(40, 40, 50)
+            checkbox.Text = ""
+            checkbox.ZIndex = 8
+            checkbox.AutoButtonColor = false
+            checkbox.Parent = row
+            Instance.new("UICorner", checkbox).CornerRadius = UDim.new(0, 4)
+            local checkMark = Instance.new("TextLabel")
+            checkMark.Size = UDim2.new(1, 0, 1, 0)
+            checkMark.BackgroundTransparency = 1
+            checkMark.Text = "✓"
+            checkMark.TextColor3 = Theme.TextMain
+            checkMark.Font = Enum.Font.GothamBold
+            checkMark.TextSize = 12
+            checkMark.Visible = selected[optionName] and true or false
+            checkMark.ZIndex = 9
+            checkMark.Parent = checkbox
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -30, 1, 0)
+            label.Position = UDim2.new(0, 28, 0, 0)
+            label.BackgroundTransparency = 1
+            label.Text = optionName
+            label.TextColor3 = Theme.TextSecondary
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 11
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.ZIndex = 8
+            label.Parent = row
+            row.MouseEnter:Connect(function() row.BackgroundColor3 = Theme.ElementHover end)
+            row.MouseLeave:Connect(function() row.BackgroundColor3 = Color3.fromRGB(0,0,0) end)
+            local function toggle()
+                selected[optionName] = not selected[optionName]
+                checkbox.BackgroundColor3 = selected[optionName] and Theme.Accent or Color3.fromRGB(40, 40, 50)
+                checkMark.Visible = selected[optionName]
+                updateSelectedText()
+            end
+            row.MouseButton1Click:Connect(toggle)
+            checkbox.MouseButton1Click:Connect(toggle)
+            table.insert(dropdown.Checkboxes, {checkbox = row})
+        end
+        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+    end
+    rebuildOptions()
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+    end)
+    triggerBtn.MouseButton1Click:Connect(function()
+        dropdown.Opened = not dropdown.Opened
+        listScroll.Visible = dropdown.Opened
+        if dropdown.Opened then
+            local h = math.min(#dropdown.Options * 32 + 8, 160)
+            listScroll.Size = UDim2.new(1, -16, 0, h)
+            dropdownFrame.Size = UDim2.new(1, -28, 0, 42 + h + 8)
+        else
+            listScroll.Size = UDim2.new(1, -16, 0, 0)
+            dropdownFrame.Size = UDim2.new(1, -28, 0, 42)
+        end
+    end)
+    function dropdown:Refresh(newOptions)
+        dropdown.Options = newOptions
+        rebuildOptions()
+        updateSelectedText()
+    end
+    return dropdown
+end
+
+-- ================= MAIN SCRIPT =================
+local UiPremium = YutaPremiumLib:CreateWindow("Yuta Hub - Steal an egg")
+local TabHome = YutaPremiumLib:CreateTab(UiPremium, "Home")
+local TabMisc = YutaPremiumLib:CreateTab(UiPremium, "Misc")
+
+YutaPremiumLib:CreateSection(TabHome, "Area Selection")
+
+local areas = {
+    {name = "Forest", pos = Vector3.new(596.84, 70.57, -329.17)},
+    {name = "Lake", pos = Vector3.new(743.57, 70.57, -410.51)},
+    {name = "Desert", pos = Vector3.new(950.84, 70.57, -324.49)},
+    {name = "Jungle", pos = Vector3.new(1187.94, 70.57, -409.57)},
+    {name = "Snow", pos = Vector3.new(1492.5, 70.57, -314.79)},
+    {name = "Volcano", pos = Vector3.new(1879.5, 70.57, -398.11)},
+    {name = "Abyss Ocean", pos = Vector3.new(2280.2, 70.57, -326.46)},
+    {name = "Prehistoric", pos = Vector3.new(2814.4, 70.57, -398.52)},
+    {name = "Cosmic", pos = Vector3.new(3393.1, 70.57, -325.15)},
+}
+
+local areaNames = {}
+for _, a in ipairs(areas) do table.insert(areaNames, a.name) end
+
+local selectedAreasSet = {}
+local selectedAreasOrdered = {}
+
+YutaPremiumLib:CreateMultiSelectDropdown(TabHome, "Select Area (Priority)", areaNames, function(selected)
+    selectedAreasSet = selected
+    selectedAreasOrdered = {}
+    for i = #areas, 1, -1 do
+        local area = areas[i]
+        if selectedAreasSet[area.name] then
+            table.insert(selectedAreasOrdered, area)
+        end
+    end
+end)
+
+YutaPremiumLib:CreateSection(TabHome, "Farm Delay Mode")
+local notifMode = "3 notif"
+YutaPremiumLib:CreateDropdown(TabHome, "Delay Mode", {"3 notif", "2 notif", "1 notif"}, function(choice)
+    notifMode = choice
+    statusLabel:UpdateText("Delay mode: " .. choice)
+end)
+
+local statusLabel = YutaPremiumLib:CreateLabel(TabHome, "Status: Waiting...")
+
+local remotePath = ReplicatedStorage:FindFirstChild("Network")
+if remotePath then
+    remotePath = remotePath:FindFirstChild("Eggs: RequestAreaEggCarry")
+end
+
+local function getModelsInArea(area)
+    local folder = Workspace:FindFirstChild("AreaEggSlotsClient")
+    if not folder then return {} end
+    local models = {}
+    for _, obj in ipairs(folder:GetChildren()) do
+        if obj:IsA("Model") or obj:IsA("BasePart") then
+            local pos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
+            if (pos - area.pos).Magnitude <= 10 then
+                table.insert(models, obj)
+            end
+        end
+    end
+    return models
+end
+
+local function cleanDebris()
+    local debrisFolder = Workspace:FindFirstChild("__DEBRIS")
+    if debrisFolder then
+        for _, obj in ipairs(debrisFolder:GetChildren()) do
+            if obj:IsA("MeshPart") then obj:Destroy() end
+        end
+    end
+end
+
+-- ====== ROOT PART & RANDOMIZE ======
+local ROOT_PART_NAME = "skIUFIndfo83298J"
+local randomizeNamesActive = false
+
+local function getCharacterModel()
+    return Workspace:FindFirstChild(Players.LocalPlayer.Name) or Players.LocalPlayer.Character
+end
+
+local function getRootPart()
+    local charModel = getCharacterModel()
+    local root = nil
+
+    if charModel then
+        local humanoid = charModel:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            root = humanoid.RootPart
+        end
+    end
+
+    if not root then
+        local char = Players.LocalPlayer.Character
+        if char then
+            root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild(ROOT_PART_NAME)
+        end
+    end
+
+    return root
+end
+
+local function renameRootPart()
+    local root = getRootPart()
+    if root and root:IsA("Part") then
+        root.Name = ROOT_PART_NAME
+    end
+end
+
+Players.LocalPlayer.CharacterAdded:Connect(function()
+    if randomizeNamesActive then
+        renameRootPart()
+    end
+end)
+
+-- God Mode sekali jalan: health 0, toggle randomize name on/off 4 detik
+local function runGodModeOnce()
+    task.spawn(function()
+        local charModel = getCharacterModel()
+        if not charModel then
+            statusLabel:UpdateText("Status: Character model not found")
+            return
+        end
+        local humanoid = charModel:FindFirstChildOfClass("Humanoid")
+        if not humanoid then
+            statusLabel:UpdateText("Status: Humanoid not found")
+            return
+        end
+
+        humanoid.Health = 0
+        statusLabel:UpdateText("Status: Health reset, toggling randomize...")
+
+        local start = tick()
+        while (tick() - start) < 4 do
+            randomizeNamesActive = true
+            renameRootPart()
+            task.wait(0.0)
+            randomizeNamesActive = false
+            task.wait(0.0)
+        end
+        randomizeNamesActive = false
+        statusLabel:UpdateText("Status: Reset finished")
+    end)
+end
+
+-- ====== FARM CEPAT (TELEPORT) DENGAN DELAY MODE ======
+local farmDelay = 0.3
+local farmActive = false
+local farmLoop = nil
+
+local function startFarm()
+    if farmActive then return end
+    if #selectedAreasOrdered == 0 then
+        statusLabel:UpdateText("Status: Select at least 1 area!")
+        return
+    end
+
+    local root = getRootPart()
+    if not root then
+        statusLabel:UpdateText("Status: Root part not found")
+        return
+    end
+
+    farmActive = true
+
+    farmLoop = task.spawn(function()
+        while farmActive do
+            cleanDebris()
+
+            -- Cari telur sesuai prioritas area (tanpa rarity filter)
+            local targetArea = nil
+            local models = {}
+            for _, area in ipairs(selectedAreasOrdered) do
+                local areaModels = getModelsInArea(area)
+                if #areaModels > 0 then
+                    targetArea = area
+                    models = areaModels
+                    break
+                end
+            end
+
+            if not targetArea then
+                statusLabel:UpdateText("Status: No egg found, waiting...")
+                task.wait(0.1)
+                continue
+            end
+
+            local targetModel = models[math.random(1, #models)]
+            local targetPos = targetModel:IsA("Model") and targetModel:GetPivot().Position or targetModel.Position
+
+            -- Delay sebelum teleport ke egg
+            task.wait(farmDelay)
+
+            -- 1. TP ke telur
+            root = getRootPart()
+            if not root or not root.Parent then
+                statusLabel:UpdateText("Status: Menunggu root part...")
+                if notifMode == "1 notif" then
+                    task.wait(0.3)
+                else
+                    task.wait(0.0)
+                end
+                continue
+            end
+            root.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+            statusLabel:UpdateText("Status: TP to " .. targetModel.Name .. " (" .. targetArea.name .. ")")
+
+            -- Delay sebelum remote
+            task.wait(0.2)
+
+            -- 2. Tembak remote
+            if remotePath then
+                pcall(function()
+                    remotePath:InvokeServer({ Uid = targetModel.Name })
+                end)
+                statusLabel:UpdateText("Status: Remote sent (" .. targetModel.Name .. ")")
+            else
+                statusLabel:UpdateText("Status: Remote not found!")
+                break
+            end
+
+            -- Delay sebelum safe zone
+            if notifMode == "2 notif" then
+                task.wait(0.5)
+            else
+                task.wait(0.3)
+            end
+
+            -- 3. TP ke safe zone
+            root = getRootPart()
+            if root and root.Parent then
+                root.CFrame = CFrame.new(Vector3.new(529.53, 70.57, -383.1))
+                statusLabel:UpdateText("Status: Safe zone")
+            end
+
+            -- Delay setelah safe zone sebelum loop lagi
+            task.wait(farmDelay)
+            if not farmActive then break end
+        end
+        statusLabel:UpdateText("Status: Stopped.")
+    end)
+end
+
+local function stopFarm()
+    farmActive = false
+    if farmLoop then
+        pcall(function() task.cancel(farmLoop) end)
+        farmLoop = nil
+    end
+end
+
+YutaPremiumLib:CreateToggle(TabHome, "Start Auto Farm (Teleport)", function(state)
+    if state then
+        startFarm()
+    else
+        stopFarm()
+    end
+end)
+
+YutaPremiumLib:CreateSection(TabMisc, "Farm Settings")
+YutaPremiumLib:CreateTextBox(TabMisc, "Farm Delay", "Seconds", function(newDelay)
+    farmDelay = newDelay
+    statusLabel:UpdateText("Farm delay changed to: " .. tostring(newDelay) .. " seconds")
+end)
+
+YutaPremiumLib:CreateSection(TabMisc, "Reset")
+YutaPremiumLib:CreateButton(TabMisc, "Reset", function()
+    runGodModeOnce()
+end)
+
+YutaPremiumLib:CreateSection(TabMisc, "Names")
+YutaPremiumLib:CreateToggle(TabMisc, " Names", function(state)
+    randomizeNamesActive = state
+    if state then
+        renameRootPart()
+        statusLabel:UpdateText("Root part renamed to " .. ROOT_PART_NAME)
+    else
+        statusLabel:UpdateText("Name randomization off")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        local vu = game:GetService("VirtualUser")
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new(0, 0))
+        task.wait(120)
+    end
+end)
